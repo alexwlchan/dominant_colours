@@ -20,16 +20,3 @@ default-features = false
 version = "0.5"
 default-features = false
 features = ["std"]
-
-[dependencies.structopt]
-version = "0.3"
-default-features = false
-
-[dependencies.rand]
-version = "0.8"
-default-features = false
-features = ["std"]
-
-[dependencies.rand_chacha]
-version = "0.3"
-default-features = false

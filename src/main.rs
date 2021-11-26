@@ -1,7 +1,9 @@
+#![deny(warnings)]
+
 #[macro_use]
 extern crate clap;
 
-use clap::{App, Arg, ArgGroup};
+use clap::{App, Arg};
 use palette::{Lab, Pixel, Srgb, Srgba};
 use kmeans_colors::{get_kmeans_hamerly};
 
