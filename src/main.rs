@@ -1,10 +1,9 @@
 #[macro_use]
 extern crate clap;
 
-use clap::{App, Arg};
-// use kmeans_colors::{get_kmeans_hamerly, MapColor};
-use palette::{FromColor, IntoColor, Lab, Pixel, Srgb, Srgba};
-use kmeans_colors::{get_kmeans, get_kmeans_hamerly, Calculate, Kmeans, MapColor, Sort};
+use clap::{App, Arg, ArgGroup};
+use palette::{Lab, Pixel, Srgb, Srgba};
+use kmeans_colors::{get_kmeans_hamerly};
 
 fn main() {
     let matches =
@@ -24,6 +23,12 @@ fn main() {
                     .help("how many colours to find")
                     .default_value("5")
                     .takes_value(true)
+            )
+            .arg(
+                Arg::with_name("no-palette")
+                    .long("no-palette")
+                    .help("Just print the hex values, not colour previews")
+                    .takes_value(false)
             )
             .get_matches();
 
@@ -47,7 +52,7 @@ fn main() {
         .collect();
 
     let max_iterations = 20;
-    let converge = 5.0;
+    let converge = 50.0;
     let verbose = false;
     let seed: u64 = 0;
 
@@ -59,16 +64,13 @@ fn main() {
         &lab,
         seed,
     );
-    //
-    // let rgb = &run_result.centroids
-    //     .iter()
-    //     .map(|x| Srgb::from(*x).into_format())
-    //     .collect::<Vec<Srgb<u8>>>();
 
-    // println!("{:?}", run_result);
+    let rgb = &run_result.centroids
+        .iter()
+        .map(|x| Srgb::from(*x).into_format())
+        .collect::<Vec<Srgb<u8>>>();
 
-    println!("matches = {:?}", matches);
-    println!("count = {:?}", count);
-    // println!("lab = {:?}", lab);
-    println!("Hello, world!");
+    for c in rgb {
+        println!("\x1B[38;2;{};{};{}m▇ #{:02x}{:02x}{:02x}\x1B[0m", c.red, c.green, c.blue, c.red, c.green, c.blue);
+    }
 }

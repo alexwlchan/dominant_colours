@@ -177,11 +177,9 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "45b02102b24e8f7163d7f794f2a250e3b5da067994695521310338da0db6ae2c"
 dependencies = [
- "image",
  "palette",
  "rand",
  "rand_chacha",
- "structopt",
 ]
 
 [[package]]
