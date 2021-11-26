@@ -1,0 +1,35 @@
+[package]
+name = "dominant_colours"
+version = "1.0.0"
+edition = "2018"
+
+[dependencies]
+clap = "2.33"
+
+[dependencies.kmeans_colors]
+version = "0.4.0"
+features = ["palette_color"]
+default-features = false
+
+[dependencies.image]
+version = "0.23"
+features = ["jpeg", "png"]
+default-features = false
+
+[dependencies.palette]
+version = "0.5"
+default-features = false
+features = ["std"]
+
+[dependencies.structopt]
+version = "0.3"
+default-features = false
+
+[dependencies.rand]
+version = "0.8"
+default-features = false
+features = ["std"]
+
+[dependencies.rand_chacha]
+version = "0.3"
+default-features = false
