@@ -4,6 +4,7 @@
 extern crate clap;
 
 use clap::{App, Arg};
+use image::imageops::FilterType;
 use palette::{Lab, Pixel, Srgb, Srgba};
 use kmeans_colors::{get_kmeans_hamerly};
 
@@ -37,42 +38,58 @@ fn main() {
     // This .unwrap() is safe because "path" is a required param
     let path = matches.value_of("path").unwrap();
 
-    // Get the count as a number, or default to 5.
+    // Get the count as a number.
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
-    let count = value_t!(matches, "count", usize)
-        .unwrap_or_else(|e| e.exit());
+    let count = value_t!(matches, "count", usize).unwrap_or_else(|e| e.exit());
 
-    let img = image::open(&path)
-        .unwrap()
-        .into_rgba8();
+    // Open the image, then resize it.  For this tool I'd rather get a good answer
+    // quickly than a great answer slower.
+    //
+    // The choice of max dimension is arbitrary.  Making it smaller means you get
+    // faster results, but possibly at the loss of quality.
+    //
+    // The nearest neighbour algorithm produces images that don't look as good,
+    // but it's much much faster and the loss of quality is unlikely to be
+    // an issue when looking for dominant colours.
+    //
+    // Note: when trying to work out what's "fast enough", make sure you use release
+    // mode.  The image/k-means operations are significantly faster (=2 orders
+    // of magnitude) than in debug mode.
+    //
+    // See https://docs.rs/image/0.23.14/image/imageops/enum.FilterType.html
+    let img = image::open(&path).unwrap();
+    let resized_img = img.resize(400, 400, FilterType::Nearest);
 
-    let img_vec = img.into_raw();
+    let img_vec = resized_img.into_rgba8().into_raw();
 
+    // This is based on code from the kmeans-colors binary, but with a bunch of
+    // the options stripped out.
+    // See https://github.com/okaneco/kmeans-colors/blob/9960c55dbc572e08d564dc341d6fd7e66fa79b5e/src/bin/kmeans_colors/app.rs
     let lab: Vec<Lab> = Srgba::from_raw_slice(&img_vec)
         .iter()
         .map(|x| x.into_format().into())
         .collect();
 
     let max_iterations = 20;
-    let converge = 50.0;
+    let converge = 1.0;
     let verbose = false;
     let seed: u64 = 0;
 
-    let run_result = get_kmeans_hamerly(
-        count,
-        max_iterations,
-        converge,
-        verbose,
-        &lab,
-        seed,
-    );
+    let result = get_kmeans_hamerly(count, max_iterations, converge, verbose, &lab, seed);
 
-    let rgb = &run_result.centroids
+    let rgb = &result.centroids
         .iter()
         .map(|x| Srgb::from(*x).into_format())
         .collect::<Vec<Srgb<u8>>>();
 
+    // This uses ANSI escape sequences and Unicode block elements to print
+    // a palette of hex strings which are coloured to match.
+    // See https://alexwlchan.net/2021/04/coloured-squares/
     for c in rgb {
-        println!("\x1B[38;2;{};{};{}m▇ #{:02x}{:02x}{:02x}\x1B[0m", c.red, c.green, c.blue, c.red, c.green, c.blue);
+        if matches.is_present("no-palette") {
+            println!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+        } else {
+            println!("\x1B[38;2;{};{};{}m▇ #{:02x}{:02x}{:02x}\x1B[0m", c.red, c.green, c.blue, c.red, c.green, c.blue);
+        }
     }
 }
