@@ -93,3 +93,106 @@ fn main() {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str;
+
+    use assert_cmd::assert::OutputAssertExt;
+    use assert_cmd::Command;
+
+    // Note: for the purposes of these tests, I mostly trust the k-means code
+    // provided by the external library.
+
+    #[test]
+    fn it_prints_the_color_with_ansi_escape_codes() {
+        let output = get_success(&["./src/tests/red.png", "--count=1"]);
+
+        assert_eq!(output.exit_code, 0);
+
+        assert!(
+            output.stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
+            output.stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
+            "stdout = {:?}", output.stdout
+        );
+
+        assert_eq!(output.stderr, "");
+    }
+
+    #[test]
+    fn it_omits_the_escape_codes_with_no_palette() {
+        let output = get_success(&["./src/tests/red.png", "--count=1"]);
+
+        assert_eq!(output.exit_code, 0);
+
+        assert!(
+            output.stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
+            output.stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
+            "stdout = {:?}", output.stdout
+        );
+
+        assert_eq!(output.stderr, "");
+    }
+
+    #[test]
+    fn it_defaults_to_five_colours() {
+        let output = get_success(&["./src/tests/noise.jpg"]);
+
+        assert_eq!(output.stdout.matches("\n").count(), 5, "stdout = {:?}", output.stdout);
+    }
+
+    #[test]
+    fn it_lets_you_choose_the_count() {
+        let output = get_success(&["./src/tests/noise.jpg", "--count=8"]);
+
+        assert_eq!(output.stdout.matches("\n").count(), 8, "stdout = {:?}", output.stdout);
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_an_invalid_count() {
+        let output = get_failure(&["./src/tests/red.png", "--count=NaN"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(output.stderr, "error: Invalid value: The argument 'NaN' isn't a valid value\n");
+    }
+
+    struct DcOutput {
+        exit_code: i32,
+        stdout: String,
+        stderr: String,
+    }
+
+    fn get_success(args: &[&str]) -> DcOutput {
+        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
+        let output = cmd
+            .args(args)
+            .unwrap()
+            .assert()
+            .success()
+            .get_output()
+            .to_owned();
+
+        DcOutput {
+            exit_code: output.status.code().unwrap(),
+            stdout: str::from_utf8(&output.stdout).unwrap().to_owned(),
+            stderr: str::from_utf8(&output.stderr).unwrap().to_owned(),
+        }
+    }
+
+    fn get_failure(args: &[&str]) -> DcOutput {
+        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
+        let output = cmd
+            .args(args)
+            .unwrap_err()
+            .as_output()
+            .unwrap()
+            .to_owned();
+
+        DcOutput {
+            exit_code: output.status.code().unwrap(),
+            stdout: str::from_utf8(&output.stdout).unwrap().to_owned(),
+            stderr: str::from_utf8(&output.stderr).unwrap().to_owned(),
+        }
+    }
+}
