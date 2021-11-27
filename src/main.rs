@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn it_prints_the_color_with_ansi_escape_codes() {
-        let output = get_output(&["./src/tests/red.png", "--count=1"]);
+        let output = get_success(&["./src/tests/red.png", "--count=1"]);
 
         assert_eq!(output.status.code().unwrap(), 0);
 
@@ -123,7 +123,7 @@ mod tests {
 
     #[test]
     fn it_omits_the_escape_codes_with_no_palette() {
-        let output = get_output(&["./src/tests/red.png", "--count=1"]);
+        let output = get_success(&["./src/tests/red.png", "--count=1"]);
 
         assert_eq!(output.status.code().unwrap(), 0);
 
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn it_defaults_to_five_colours() {
-        let output = get_output(&["./src/tests/noise.jpg"]);
+        let output = get_success(&["./src/tests/noise.jpg"]);
 
         let stdout = str::from_utf8(&output.stdout).unwrap();
         assert_eq!(stdout.matches("\n").count(), 5, "stdout = {:?}", stdout);
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn it_lets_you_choose_the_count() {
-        let output = get_output(&["./src/tests/noise.jpg", "--count=8"]);
+        let output = get_success(&["./src/tests/noise.jpg", "--count=8"]);
 
         let stdout = str::from_utf8(&output.stdout).unwrap();
         assert_eq!(stdout.matches("\n").count(), 8, "stdout = {:?}", stdout);
@@ -155,20 +155,14 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_an_invalid_count() {
-        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
-        let output = cmd
-            .args(&["./src/tests/red.png", "--count=NaN"])
-            .unwrap_err()
-            .as_output()
-            .unwrap()
-            .to_owned();
+        let output = get_failure(&["./src/tests/red.png", "--count=NaN"]);
 
         assert_eq!(output.status.code().unwrap(), 1);
         assert_eq!(str::from_utf8(&output.stdout).unwrap(), "");
         assert_eq!(str::from_utf8(&output.stderr).unwrap(), "error: Invalid value: The argument 'NaN' isn't a valid value\n");
     }
 
-    fn get_output(args: &[&str]) -> Output {
+    fn get_success(args: &[&str]) -> Output {
         let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
         cmd
             .args(args)
@@ -176,6 +170,16 @@ mod tests {
             .assert()
             .success()
             .get_output()
+            .to_owned()
+    }
+
+    fn get_failure(args: &[&str]) -> Output {
+        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
+        cmd
+            .args(args)
+            .unwrap_err()
+            .as_output()
+            .unwrap()
             .to_owned()
     }
 }
