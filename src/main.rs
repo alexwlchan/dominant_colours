@@ -93,3 +93,47 @@ fn main() {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str;
+
+    use assert_cmd::assert::OutputAssertExt;
+    use assert_cmd::Command;
+
+    // Note: for the purposes of these tests, I mostly trust the k-means code
+    // provided by the external library.  The test images are blocks of solid colour
+    // that should give deterministic output.
+
+    #[test]
+    fn it_prints_the_color_with_ansi_escape_codes() {
+        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
+        let output = cmd
+            .args(&["./src/tests/red.png", "--count=1"])
+            .unwrap()
+            .assert()
+            .success()
+            .get_output()
+            .to_owned();
+
+        assert_eq!(output.status.code().unwrap(), 0);
+        assert_eq!(str::from_utf8(&output.stdout).unwrap(), "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n");
+        assert_eq!(str::from_utf8(&output.stderr).unwrap(), "");
+    }
+
+    #[test]
+    fn it_omits_the_escape_codes_with_no_palette() {
+        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
+        let output = cmd
+            .args(&["./src/tests/red.png", "--count=1", "--no-palette"])
+            .unwrap()
+            .assert()
+            .success()
+            .get_output()
+            .to_owned();
+
+        assert_eq!(output.status.code().unwrap(), 0);
+        assert_eq!(str::from_utf8(&output.stdout).unwrap(), "#ff0000\n");
+        assert_eq!(str::from_utf8(&output.stderr).unwrap(), "");
+    }
+}
