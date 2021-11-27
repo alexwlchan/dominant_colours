@@ -157,9 +157,15 @@ mod tests {
     fn it_fails_if_you_pass_an_invalid_count() {
         let output = get_failure(&["./src/tests/red.png", "--count=NaN"]);
 
-        assert_eq!(output.status.code().unwrap(), 1);
-        assert_eq!(str::from_utf8(&output.stdout).unwrap(), "");
-        assert_eq!(str::from_utf8(&output.stderr).unwrap(), "error: Invalid value: The argument 'NaN' isn't a valid value\n");
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(output.stderr, "error: Invalid value: The argument 'NaN' isn't a valid value\n");
+    }
+
+    struct DcOutput {
+        exit_code: i32,
+        stdout: &str,
+        stderr: &str,
     }
 
     fn get_success(args: &[&str]) -> Output {
@@ -173,13 +179,19 @@ mod tests {
             .to_owned()
     }
 
-    fn get_failure(args: &[&str]) -> Output {
+    fn get_failure(args: &[&str]) -> DcOutput {
         let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
-        cmd
+        let output = cmd
             .args(args)
             .unwrap_err()
             .as_output()
             .unwrap()
-            .to_owned()
+            .to_owned();
+
+        DcOutput {
+            exit_code: output.status.code().unwrap(),
+            stdout: str::from_utf8(&output.stdout).unwrap(),
+            stderr: str::from_utf8(&output.stderr).unwrap(),
+        }
     }
 }
