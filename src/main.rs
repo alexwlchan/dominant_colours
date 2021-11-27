@@ -102,8 +102,7 @@ mod tests {
     use assert_cmd::Command;
 
     // Note: for the purposes of these tests, I mostly trust the k-means code
-    // provided by the external library.  The test images are blocks of solid colour
-    // that should give somewhat deterministic output.
+    // provided by the external library.
 
     #[test]
     fn it_prints_the_color_with_ansi_escape_codes() {
@@ -132,7 +131,7 @@ mod tests {
     fn it_omits_the_escape_codes_with_no_palette() {
         let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
         let output = cmd
-            .args(&["./src/tests/red.png", "--count=1", "--no-palette"])
+            .args(&["./src/tests/red.png", "--count=1"])
             .unwrap()
             .assert()
             .success()
@@ -143,12 +142,42 @@ mod tests {
 
         let stdout = str::from_utf8(&output.stdout).unwrap();
         assert!(
-            stdout == "#ff0000\n" ||
-            stdout == "#fe0000\n",
+            stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
+            stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
             "stdout = {:?}", stdout
         );
 
         assert_eq!(str::from_utf8(&output.stderr).unwrap(), "");
+    }
+
+    #[test]
+    fn it_defaults_to_five_colours() {
+        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
+        let output = cmd
+            .args(&["./src/tests/noise.jpg"])
+            .unwrap()
+            .assert()
+            .success()
+            .get_output()
+            .to_owned();
+
+        let stdout = str::from_utf8(&output.stdout).unwrap();
+        assert_eq!(stdout.matches("\n").count(), 5, "stdout = {:?}", stdout);
+    }
+
+    #[test]
+    fn it_lets_you_choose_the_count() {
+        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
+        let output = cmd
+            .args(&["./src/tests/noise.jpg", "--count=8"])
+            .unwrap()
+            .assert()
+            .success()
+            .get_output()
+            .to_owned();
+
+        let stdout = str::from_utf8(&output.stdout).unwrap();
+        assert_eq!(stdout.matches("\n").count(), 8, "stdout = {:?}", stdout);
     }
 
     #[test]
