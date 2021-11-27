@@ -21,8 +21,8 @@ fn main() {
                     .index(1)
             )
             .arg(
-                Arg::with_name("count")
-                    .long("count")
+                Arg::with_name("max-colours")
+                    .long("max-colours")
                     .help("how many colours to find")
                     .default_value("5")
                     .takes_value(true)
@@ -38,9 +38,9 @@ fn main() {
     // This .unwrap() is safe because "path" is a required param
     let path = matches.value_of("path").unwrap();
 
-    // Get the count as a number.
+    // Get the max colours as a number.
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
-    let count = value_t!(matches, "count", usize).unwrap_or_else(|e| e.exit());
+    let max_colours = value_t!(matches, "max-colours", usize).unwrap_or_else(|e| e.exit());
 
     let img = match image::open(&path) {
         Ok(im) => im,
@@ -82,7 +82,7 @@ fn main() {
     let verbose = false;
     let seed: u64 = 0;
 
-    let result = get_kmeans_hamerly(count, max_iterations, converge, verbose, &lab, seed);
+    let result = get_kmeans_hamerly(max_colours, max_iterations, converge, verbose, &lab, seed);
 
     let rgb = &result.centroids
         .iter()
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn it_prints_the_color_with_ansi_escape_codes() {
-        let output = get_success(&["./src/tests/red.png", "--count=1"]);
+        let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
 
         assert_eq!(output.exit_code, 0);
 
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn it_omits_the_escape_codes_with_no_palette() {
-        let output = get_success(&["./src/tests/red.png", "--count=1"]);
+        let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
 
         assert_eq!(output.exit_code, 0);
 
@@ -149,15 +149,15 @@ mod tests {
     }
 
     #[test]
-    fn it_lets_you_choose_the_count() {
-        let output = get_success(&["./src/tests/noise.jpg", "--count=8"]);
+    fn it_lets_you_choose_the_max_colours() {
+        let output = get_success(&["./src/tests/noise.jpg", "--max-colours=8"]);
 
         assert_eq!(output.stdout.matches("\n").count(), 8, "stdout = {:?}", output.stdout);
     }
 
     #[test]
-    fn it_fails_if_you_pass_an_invalid_count() {
-        let output = get_failure(&["./src/tests/red.png", "--count=NaN"]);
+    fn it_fails_if_you_pass_an_invalid_max_colours() {
+        let output = get_failure(&["./src/tests/red.png", "--max-colours=NaN"]);
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
