@@ -150,4 +150,19 @@ mod tests {
 
         assert_eq!(str::from_utf8(&output.stderr).unwrap(), "");
     }
+
+    #[test]
+    fn it_fails_if_you_pass_an_invalid_count() {
+        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
+        let output = cmd
+            .args(&["./src/tests/red.png", "--count=NaN"])
+            .unwrap_err()
+            .as_output()
+            .unwrap()
+            .to_owned();
+
+        assert_eq!(output.status.code().unwrap(), 1);
+        assert_eq!(str::from_utf8(&output.stdout).unwrap(), "");
+        assert_eq!(str::from_utf8(&output.stderr).unwrap(), "error: Invalid value: The argument 'NaN' isn't a valid value\n");
+    }
 }
