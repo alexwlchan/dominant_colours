@@ -97,7 +97,6 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use std::str;
-    use std::process::Output;
 
     use assert_cmd::assert::OutputAssertExt;
     use assert_cmd::Command;
@@ -109,48 +108,44 @@ mod tests {
     fn it_prints_the_color_with_ansi_escape_codes() {
         let output = get_success(&["./src/tests/red.png", "--count=1"]);
 
-        assert_eq!(output.status.code().unwrap(), 0);
+        assert_eq!(output.exit_code, 0);
 
-        let stdout = str::from_utf8(&output.stdout).unwrap();
         assert!(
-            stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
-            stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
-            "stdout = {:?}", stdout
+            output.stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
+            output.stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
+            "stdout = {:?}", output.stdout
         );
 
-        assert_eq!(str::from_utf8(&output.stderr).unwrap(), "");
+        assert_eq!(output.stderr, "");
     }
 
     #[test]
     fn it_omits_the_escape_codes_with_no_palette() {
         let output = get_success(&["./src/tests/red.png", "--count=1"]);
 
-        assert_eq!(output.status.code().unwrap(), 0);
+        assert_eq!(output.exit_code, 0);
 
-        let stdout = str::from_utf8(&output.stdout).unwrap();
         assert!(
-            stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
-            stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
-            "stdout = {:?}", stdout
+            output.stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
+            output.stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
+            "stdout = {:?}", output.stdout
         );
 
-        assert_eq!(str::from_utf8(&output.stderr).unwrap(), "");
+        assert_eq!(output.stderr, "");
     }
 
     #[test]
     fn it_defaults_to_five_colours() {
         let output = get_success(&["./src/tests/noise.jpg"]);
 
-        let stdout = str::from_utf8(&output.stdout).unwrap();
-        assert_eq!(stdout.matches("\n").count(), 5, "stdout = {:?}", stdout);
+        assert_eq!(output.stdout.matches("\n").count(), 5, "stdout = {:?}", output.stdout);
     }
 
     #[test]
     fn it_lets_you_choose_the_count() {
         let output = get_success(&["./src/tests/noise.jpg", "--count=8"]);
 
-        let stdout = str::from_utf8(&output.stdout).unwrap();
-        assert_eq!(stdout.matches("\n").count(), 8, "stdout = {:?}", stdout);
+        assert_eq!(output.stdout.matches("\n").count(), 8, "stdout = {:?}", output.stdout);
     }
 
     #[test]
@@ -164,19 +159,25 @@ mod tests {
 
     struct DcOutput {
         exit_code: i32,
-        stdout: &str,
-        stderr: &str,
+        stdout: String,
+        stderr: String,
     }
 
-    fn get_success(args: &[&str]) -> Output {
+    fn get_success(args: &[&str]) -> DcOutput {
         let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
-        cmd
+        let output = cmd
             .args(args)
             .unwrap()
             .assert()
             .success()
             .get_output()
-            .to_owned()
+            .to_owned();
+
+        DcOutput {
+            exit_code: output.status.code().unwrap(),
+            stdout: str::from_utf8(&output.stdout).unwrap().to_owned(),
+            stderr: str::from_utf8(&output.stderr).unwrap().to_owned(),
+        }
     }
 
     fn get_failure(args: &[&str]) -> DcOutput {
@@ -190,8 +191,8 @@ mod tests {
 
         DcOutput {
             exit_code: output.status.code().unwrap(),
-            stdout: str::from_utf8(&output.stdout).unwrap(),
-            stderr: str::from_utf8(&output.stderr).unwrap(),
+            stdout: str::from_utf8(&output.stdout).unwrap().to_owned(),
+            stderr: str::from_utf8(&output.stderr).unwrap().to_owned(),
         }
     }
 }
