@@ -93,10 +93,12 @@ fn main() {
     // a palette of hex strings which are coloured to match.
     // See https://alexwlchan.net/2021/04/coloured-squares/
     for c in rgb {
+        let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+
         if matches.is_present("no-palette") {
-            println!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+            println!("{}", display_value);
         } else {
-            println!("\x1B[38;2;{};{};{}m▇ #{:02x}{:02x}{:02x}\x1B[0m", c.red, c.green, c.blue, c.red, c.green, c.blue);
+            println!("\x1B[38;2;{};{};{}m▇ {}\x1B[0m", c.red, c.green, c.blue, display_value);
         }
     }
 }
