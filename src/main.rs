@@ -42,7 +42,15 @@ fn main() {
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
     let count = value_t!(matches, "count", usize).unwrap_or_else(|e| e.exit());
 
-    // Open the image, then resize it.  For this tool I'd rather get a good answer
+    let img = match image::open(&path) {
+        Ok(im) => im,
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        },
+    };
+
+    // Resize the image after we open it.  For this tool I'd rather get a good answer
     // quickly than a great answer slower.
     //
     // The choice of max dimension is arbitrary.  Making it smaller means you get
@@ -57,7 +65,6 @@ fn main() {
     // of magnitude) than in debug mode.
     //
     // See https://docs.rs/image/0.23.14/image/imageops/enum.FilterType.html
-    let img = image::open(&path).unwrap();
     let resized_img = img.resize(400, 400, FilterType::Nearest);
 
     let img_vec = resized_img.into_rgba8().into_raw();
@@ -155,6 +162,33 @@ mod tests {
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
         assert_eq!(output.stderr, "error: Invalid value: The argument 'NaN' isn't a valid value\n");
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_an_nonexistent_file() {
+        let output = get_failure(&["./doesnotexist.jpg"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(output.stderr, "No such file or directory (os error 2)\n");
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_a_non_image_file() {
+        let output = get_failure(&["./README.md"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(output.stderr, "The file extension `.\"md\"` was not recognized as an image format\n");
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_an_unsupported_image_format() {
+        let output = get_failure(&["./src/tests/green.tiff"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(output.stderr, "The image format Tiff is not supported\n");
     }
 
     struct DcOutput {
