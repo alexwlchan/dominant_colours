@@ -103,7 +103,7 @@ mod tests {
 
     // Note: for the purposes of these tests, I mostly trust the k-means code
     // provided by the external library.  The test images are blocks of solid colour
-    // that should give deterministic output.
+    // that should give somewhat deterministic output.
 
     #[test]
     fn it_prints_the_color_with_ansi_escape_codes() {
@@ -117,7 +117,14 @@ mod tests {
             .to_owned();
 
         assert_eq!(output.status.code().unwrap(), 0);
-        assert_eq!(str::from_utf8(&output.stdout).unwrap(), "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n");
+
+        let stdout = str::from_utf8(&output.stdout).unwrap();
+        assert!(
+            stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
+            stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
+            "stdout = {:?}", stdout
+        );
+
         assert_eq!(str::from_utf8(&output.stderr).unwrap(), "");
     }
 
@@ -133,7 +140,14 @@ mod tests {
             .to_owned();
 
         assert_eq!(output.status.code().unwrap(), 0);
-        assert_eq!(str::from_utf8(&output.stdout).unwrap(), "#ff0000\n");
+
+        let stdout = str::from_utf8(&output.stdout).unwrap();
+        assert!(
+            stdout == "#ff0000\n" ||
+            stdout == "#fe0000\n",
+            "stdout = {:?}", stdout
+        );
+
         assert_eq!(str::from_utf8(&output.stderr).unwrap(), "");
     }
 }
