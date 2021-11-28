@@ -8,10 +8,12 @@ use image::imageops::FilterType;
 use palette::{Lab, Pixel, Srgb, Srgba};
 use kmeans_colors::{get_kmeans_hamerly};
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn main() {
     let matches =
         App::new("dominant_colours")
-            .version("1.0")
+            .version(VERSION)
             .author("Alex Chan <alex@alexwlchan.net>")
             .about("Find the dominant colours in an image")
             .arg(
