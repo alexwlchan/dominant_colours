@@ -17,13 +17,13 @@ fn main() {
             .author("Alex Chan <alex@alexwlchan.net>")
             .about("Find the dominant colours in an image")
             .arg(
-                Arg::with_name("path")
+                Arg::with_name("PATH")
                     .help("path to the image to inspect")
                     .required(true)
                     .index(1)
             )
             .arg(
-                Arg::with_name("max-colours")
+                Arg::with_name("MAX-COLOURS")
                     .long("max-colours")
                     .help("how many colours to find")
                     .default_value("5")
@@ -38,11 +38,11 @@ fn main() {
             .get_matches();
 
     // This .unwrap() is safe because "path" is a required param
-    let path = matches.value_of("path").unwrap();
+    let path = matches.value_of("PATH").unwrap();
 
     // Get the max colours as a number.
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
-    let max_colours = value_t!(matches, "max-colours", usize).unwrap_or_else(|e| e.exit());
+    let max_colours = value_t!(matches, "MAX-COLOURS", usize).unwrap_or_else(|e| e.exit());
 
     let img = match image::open(&path) {
         Ok(im) => im,
