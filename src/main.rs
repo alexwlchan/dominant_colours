@@ -11,7 +11,7 @@ use palette::{Lab, Pixel, Srgb, Srgba};
 use kmeans_colors::{get_kmeans_hamerly};
 use image::codecs::gif::GifDecoder;
 use image::AnimationDecoder;
-use image::ImageBuffer;
+use image::{Frames, ImageBuffer, DynamicImage};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -49,11 +49,45 @@ fn main() {
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
     let max_colours = value_t!(matches, "MAX-COLOURS", usize).unwrap_or_else(|e| e.exit());
 
-    let frames = GifDecoder::new(File::open(&path).unwrap()).ok().unwrap()
-        .into_frames().collect_frames().unwrap();
-    let buffers: Vec<Vec<u8>> = frames.iter().map(|f| f.to_owned().into_buffer().into_raw()).collect();
+    let decoder = GifDecoder::new(File::open(&path).unwrap()).ok().unwrap();
+    let frames2: Frames = decoder.into_frames();
+    let frames3 = frames2.collect_frames().unwrap();
+
+    let increment = if frames3.len() <= 50 {
+        1
+    } else {
+        let s: f32 = (frames3.len() as f32) / (25 as f32);
+        s.floor() as i32
+    };
+
+    let buffers: Vec<Vec<u8>> = frames3.iter()
+    .enumerate()
+    .filter(|(i, _)| {
+        (*i as f32 / increment as f32).floor() == (*i as f32 / increment as f32)
+    }
+
+    )
+    .map(|(i, frame)| DynamicImage::ImageRgba8(frame.buffer().clone()).resize(100, 100, FilterType::Nearest).into_rgba8().into_raw())
+    .collect();
+
+    println!("incrmenet = {:?}", increment);
+    println!("frame count = {:?}", frames3.len());
+    println!("images count = {:?}", buffers.len());
+
+    // let buffers: Vec<Vec<u8>> = images.iter().map(|img| img).collect();
+
+    // std::process::exit(1);
+    //
+    // let mut frames = GifDecoder::new(File::open(&path).unwrap()).ok().unwrap()
+    //     .into_frames().collect_frames().unwrap();
+    // frames.truncate(25);
+    //
+    // println!("frame count = {:?}", frames.len());
+
+    // let buffers: Vec<Vec<u8>> = frames.iter().map(|f| f.to_owned().into_buffer().into_raw()).collect();
     let bytes: Vec<u8> = buffers.into_iter().flatten().collect();
-    println!("{:?}", bytes.len());
+
+    println!("pixels = {:?}", bytes.len());
 
     let img = match image::open(&path) {
         Ok(im) => im,
@@ -87,7 +121,7 @@ fn main() {
     // This is based on code from the kmeans-colors binary, but with a bunch of
     // the options stripped out.
     // See https://github.com/okaneco/kmeans-colors/blob/9960c55dbc572e08d564dc341d6fd7e66fa79b5e/src/bin/kmeans_colors/app.rs
-    let lab: Vec<Lab> = Srgba::from_raw_slice(&img_vec)
+    let lab: Vec<Lab> = Srgba::from_raw_slice(&bytes)
         .iter()
         .map(|x| x.into_format().into())
         .collect();
