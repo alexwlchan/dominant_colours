@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif_uppercase() {
-        let output = get_success(&["./src/tests/animated_squares.GIF"]);
+        let output = get_success(&["./src/tests/animated_upper_squares.GIF"]);
 
         assert_eq!(output.stdout.matches("\n").count(), 2, "stdout = {:?}", output.stdout);
     }
