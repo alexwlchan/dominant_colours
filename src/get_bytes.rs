@@ -28,7 +28,6 @@ pub fn get_bytes_for_image(path: &str) -> Vec<u8> {
     // of magnitude) than in debug mode.
     //
     // See https://docs.rs/image/0.23.14/image/imageops/enum.FilterType.html
-    // println!("{:?}", img);
     let resized_img = img.resize(400, 400, FilterType::Nearest);
 
     resized_img.into_rgba8().into_raw()
