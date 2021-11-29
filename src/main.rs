@@ -1,17 +1,13 @@
-// #![deny(warnings)]
+#![deny(warnings)]
 
 #[macro_use]
 extern crate clap;
 
-use std::fs::File;
-
 use clap::{App, Arg};
-use image::imageops::FilterType;
+use kmeans_colors::get_kmeans_hamerly;
 use palette::{Lab, Pixel, Srgb, Srgba};
-use kmeans_colors::{get_kmeans_hamerly};
-use image::codecs::gif::GifDecoder;
-use image::AnimationDecoder;
-use image::{Frames, ImageBuffer, DynamicImage};
+
+mod get_bytes;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -49,79 +45,16 @@ fn main() {
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
     let max_colours = value_t!(matches, "MAX-COLOURS", usize).unwrap_or_else(|e| e.exit());
 
-    let decoder = GifDecoder::new(File::open(&path).unwrap()).ok().unwrap();
-    let frames2: Frames = decoder.into_frames();
-    let frames3 = frames2.collect_frames().unwrap();
-
-    let increment = if frames3.len() <= 50 {
-        1
+    let img_bytes = if path.ends_with(".gif") {
+        get_bytes::get_bytes_for_gif(path)
     } else {
-        let s: f32 = (frames3.len() as f32) / (25 as f32);
-        s.floor() as i32
+        get_bytes::get_bytes_for_image(path)
     };
-
-    let buffers: Vec<Vec<u8>> = frames3.iter()
-    .enumerate()
-    .filter(|(i, _)| {
-        (*i as f32 / increment as f32).floor() == (*i as f32 / increment as f32)
-    }
-
-    )
-    .map(|(i, frame)| DynamicImage::ImageRgba8(frame.buffer().clone()).resize(100, 100, FilterType::Nearest).into_rgba8().into_raw())
-    .collect();
-
-    println!("incrmenet = {:?}", increment);
-    println!("frame count = {:?}", frames3.len());
-    println!("images count = {:?}", buffers.len());
-
-    // let buffers: Vec<Vec<u8>> = images.iter().map(|img| img).collect();
-
-    // std::process::exit(1);
-    //
-    // let mut frames = GifDecoder::new(File::open(&path).unwrap()).ok().unwrap()
-    //     .into_frames().collect_frames().unwrap();
-    // frames.truncate(25);
-    //
-    // println!("frame count = {:?}", frames.len());
-
-    // let buffers: Vec<Vec<u8>> = frames.iter().map(|f| f.to_owned().into_buffer().into_raw()).collect();
-    let bytes: Vec<u8> = buffers.into_iter().flatten().collect();
-
-    println!("pixels = {:?}", bytes.len());
-
-    let img = match image::open(&path) {
-        Ok(im) => im,
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        },
-    };
-
-    // Resize the image after we open it.  For this tool I'd rather get a good answer
-    // quickly than a great answer slower.
-    //
-    // The choice of max dimension is arbitrary.  Making it smaller means you get
-    // faster results, but possibly at the loss of quality.
-    //
-    // The nearest neighbour algorithm produces images that don't look as good,
-    // but it's much much faster and the loss of quality is unlikely to be
-    // an issue when looking for dominant colours.
-    //
-    // Note: when trying to work out what's "fast enough", make sure you use release
-    // mode.  The image/k-means operations are significantly faster (=2 orders
-    // of magnitude) than in debug mode.
-    //
-    // See https://docs.rs/image/0.23.14/image/imageops/enum.FilterType.html
-    // println!("{:?}", img);
-    let resized_img = img.resize(400, 400, FilterType::Nearest);
-    println!("{}", path);
-
-    let img_vec: Vec<u8> = resized_img.into_rgba8().into_raw();
 
     // This is based on code from the kmeans-colors binary, but with a bunch of
     // the options stripped out.
     // See https://github.com/okaneco/kmeans-colors/blob/9960c55dbc572e08d564dc341d6fd7e66fa79b5e/src/bin/kmeans_colors/app.rs
-    let lab: Vec<Lab> = Srgba::from_raw_slice(&bytes)
+    let lab: Vec<Lab> = Srgba::from_raw_slice(&img_bytes)
         .iter()
         .map(|x| x.into_format().into())
         .collect();
