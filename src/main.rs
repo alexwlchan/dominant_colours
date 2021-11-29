@@ -67,6 +67,7 @@ fn main() {
     // of magnitude) than in debug mode.
     //
     // See https://docs.rs/image/0.23.14/image/imageops/enum.FilterType.html
+    println!("{:?}", img);
     let resized_img = img.resize(400, 400, FilterType::Nearest);
 
     let img_vec = resized_img.into_rgba8().into_raw();
@@ -131,6 +132,24 @@ mod tests {
     }
 
     #[test]
+    fn it_can_look_at_png_images() {
+        let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
+        assert_eq!(output.exit_code, 0);
+    }
+
+    #[test]
+    fn it_can_look_at_jpeg_images() {
+        let output = get_success(&["./src/tests/noise.jpg", "--max-colours=1"]);
+        assert_eq!(output.exit_code, 0);
+    }
+
+    #[test]
+    fn it_can_look_at_static_gif_images() {
+        let output = get_success(&["./src/tests/yellow.gif", "--max-colours=1"]);
+        assert_eq!(output.exit_code, 0);
+    }
+
+    #[test]
     fn it_omits_the_escape_codes_with_no_palette() {
         let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
 
@@ -157,6 +176,13 @@ mod tests {
         let output = get_success(&["./src/tests/noise.jpg", "--max-colours=8"]);
 
         assert_eq!(output.stdout.matches("\n").count(), 8, "stdout = {:?}", output.stdout);
+    }
+
+    #[test]
+    fn it_looks_at_multiple_frames_in_an_animated_gif() {
+        let output = get_success(&["./src/tests/animated_squares.gif"]);
+
+        assert_eq!(output.stdout.matches("\n").count(), 2, "stdout = {:?}", output.stdout);
     }
 
     #[test]
