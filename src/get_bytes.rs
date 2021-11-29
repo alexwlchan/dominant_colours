@@ -34,7 +34,14 @@ pub fn get_bytes_for_image(path: &str) -> Vec<u8> {
 }
 
 pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
-    let f = File::open(path).unwrap();
+    let f = match File::open(path) {
+        Ok(im) => im,
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        },
+    };
+
     let decoder = GifDecoder::new(f).ok().unwrap();
 
     // If the GIF is animated, we want to make sure we look at multiple
