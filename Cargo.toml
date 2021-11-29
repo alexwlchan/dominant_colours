@@ -14,7 +14,7 @@ default-features = false
 
 [dependencies.image]
 version = "0.23"
-features = ["jpeg", "png"]
+features = ["jpeg", "png", "gif"]
 default-features = false
 
 [dependencies.palette]
