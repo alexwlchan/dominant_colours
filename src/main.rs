@@ -198,6 +198,15 @@ mod tests {
     }
 
     #[test]
+    fn it_fails_if_you_pass_an_nonexistent_gif() {
+        let output = get_failure(&["./doesnotexist.gif"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(output.stderr, "No such file or directory (os error 2)\n");
+    }
+
+    #[test]
     fn it_fails_if_you_pass_a_non_image_file() {
         let output = get_failure(&["./README.md"]);
 
