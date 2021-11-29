@@ -1,12 +1,17 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 
 #[macro_use]
 extern crate clap;
+
+use std::fs::File;
 
 use clap::{App, Arg};
 use image::imageops::FilterType;
 use palette::{Lab, Pixel, Srgb, Srgba};
 use kmeans_colors::{get_kmeans_hamerly};
+use image::codecs::gif::GifDecoder;
+use image::AnimationDecoder;
+use image::ImageBuffer;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -44,6 +49,12 @@ fn main() {
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
     let max_colours = value_t!(matches, "MAX-COLOURS", usize).unwrap_or_else(|e| e.exit());
 
+    let frames = GifDecoder::new(File::open(&path).unwrap()).ok().unwrap()
+        .into_frames().collect_frames().unwrap();
+    let buffers: Vec<Vec<u8>> = frames.iter().map(|f| f.to_owned().into_buffer().into_raw()).collect();
+    let bytes: Vec<u8> = buffers.into_iter().flatten().collect();
+    println!("{:?}", bytes.len());
+
     let img = match image::open(&path) {
         Ok(im) => im,
         Err(e) => {
@@ -67,10 +78,11 @@ fn main() {
     // of magnitude) than in debug mode.
     //
     // See https://docs.rs/image/0.23.14/image/imageops/enum.FilterType.html
-    println!("{:?}", img);
+    // println!("{:?}", img);
     let resized_img = img.resize(400, 400, FilterType::Nearest);
+    println!("{}", path);
 
-    let img_vec = resized_img.into_rgba8().into_raw();
+    let img_vec: Vec<u8> = resized_img.into_rgba8().into_raw();
 
     // This is based on code from the kmeans-colors binary, but with a bunch of
     // the options stripped out.
