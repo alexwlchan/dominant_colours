@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.0 - 2021-11-29
+
+Allow finding the dominant colour of GIFs.
+
+This includes animated GIFs, and dominant_colours looks at multiple frames.
+
 ## v1.0.1 - 2021-11-28
 
 Use uppercase text for variables in the help text.
