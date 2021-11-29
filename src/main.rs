@@ -45,7 +45,9 @@ fn main() {
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
     let max_colours = value_t!(matches, "MAX-COLOURS", usize).unwrap_or_else(|e| e.exit());
 
-    let img_bytes = if path.ends_with(".gif") {
+    // There's different code for fetching bytes from GIF images because
+    // GIFs are often animated, and we want a selection of frames.
+    let img_bytes = if path.to_lowercase().ends_with(".gif") {
         get_bytes::get_bytes_for_gif(path)
     } else {
         get_bytes::get_bytes_for_image(path)
@@ -157,9 +159,22 @@ mod tests {
         assert_eq!(output.stdout.matches("\n").count(), 8, "stdout = {:?}", output.stdout);
     }
 
+    // The image created in the next two tests was created with the
+    // following command:
+    //
+    //      convert -delay 200 -loop 10 -dispose previous red.png blue.png red.png blue.png red.png blue.png red.png blue.png animated_squares.gif
+    //
+
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif() {
         let output = get_success(&["./src/tests/animated_squares.gif"]);
+
+        assert_eq!(output.stdout.matches("\n").count(), 2, "stdout = {:?}", output.stdout);
+    }
+
+    #[test]
+    fn it_looks_at_multiple_frames_in_an_animated_gif_uppercase() {
+        let output = get_success(&["./src/tests/animated_squares.GIF"]);
 
         assert_eq!(output.stdout.matches("\n").count(), 2, "stdout = {:?}", output.stdout);
     }
