@@ -60,6 +60,8 @@ $ dominant_colours /path/to/crustaceans.png --no-palette
 
 This is useful if your terminal doesn't support ANSI escape codes, or you're passing the output to another tool.
 
+It currently supports JPEGs, PNGs, and GIFs (including animated GIFs).
+
 
 
 ## Further reading
