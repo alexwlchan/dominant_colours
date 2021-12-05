@@ -4,9 +4,11 @@
 extern crate clap;
 
 use clap::{App, Arg};
+use colour_output::ColourOutput;
 use kmeans_colors::get_kmeans_hamerly;
 use palette::{Lab, Pixel, Srgb, Srgba};
 
+mod colour_output;
 mod get_bytes;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -36,6 +38,13 @@ fn main() {
                     .help("Just print the hex values, not colour previews")
                     .takes_value(false)
             )
+            .arg(
+                Arg::with_name("output")
+                    .long("output")
+                    .help("how to output the colors. hex, rgb255, or rgb01")
+                    .default_value("hex")
+                    .takes_value(true)
+            )
             .get_matches();
 
     // This .unwrap() is safe because "path" is a required param
@@ -44,6 +53,8 @@ fn main() {
     // Get the max colours as a number.
     // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
     let max_colours = value_t!(matches, "MAX-COLOURS", usize).unwrap_or_else(|e| e.exit());
+
+    let colour_output = value_t!(matches, "output", ColourOutput).unwrap_or_else(|e| e.exit());
 
     // There's different code for fetching bytes from GIF images because
     // GIFs are often animated, and we want a selection of frames.
@@ -77,7 +88,7 @@ fn main() {
     // a palette of hex strings which are coloured to match.
     // See https://alexwlchan.net/2021/04/coloured-squares/
     for c in rgb {
-        let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+        let display_value = colour_output.format_colour(c);
 
         if matches.is_present("no-palette") {
             println!("{}", display_value);
