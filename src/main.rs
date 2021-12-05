@@ -132,13 +132,13 @@ mod tests {
 
     #[test]
     fn it_omits_the_escape_codes_with_no_palette() {
-        let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
+        let output = get_success(&["./src/tests/red.png", "--max-colours=1", "--no-palette"]);
 
         assert_eq!(output.exit_code, 0);
 
         assert!(
-            output.stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
-            output.stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
+            output.stdout == "#ff0000\n" ||
+            output.stdout == "#fe0000\n",
             "stdout = {:?}", output.stdout
         );
 
