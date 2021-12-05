@@ -170,6 +170,48 @@ mod tests {
         assert_eq!(output.stdout.matches("\n").count(), 8, "stdout = {:?}", output.stdout);
     }
 
+    #[test]
+    fn it_defaults_to_hex_output() {
+        let output = get_success(&["./src/tests/red.png", "--max-colours=1", "--no-palette"]);
+
+        assert_eq!(output.exit_code, 0);
+
+        assert!(
+            output.stdout == "#ff0000\n" || output.stdout == "#fe0000\n",
+            "stdout = {:?}", output.stdout
+        );
+
+        assert_eq!(output.stderr, "");
+    }
+
+    #[test]
+    fn it_prints_correct_rgb255() {
+        let output = get_success(&["./src/tests/red.png", "--max-colours=1", "--no-palette", "--output=rgb255"]);
+
+        assert_eq!(output.exit_code, 0);
+
+        assert!(
+            output.stdout == "rgb(255, 0, 0)\n" || output.stdout == "rgb(254, 0, 0)\n",
+            "stdout = {:?}", output.stdout
+        );
+
+        assert_eq!(output.stderr, "");
+    }
+
+    #[test]
+    fn it_prints_correct_rgb01() {
+        let output = get_success(&["./src/tests/red.png", "--max-colours=1", "--no-palette", "--output=rgb01"]);
+
+        assert_eq!(output.exit_code, 0);
+
+        assert!(
+            output.stdout == "rgb(1.000, 0.000, 0.000)\n" || output.stdout == "rgb(0.996, 0.000, 0.000)\n",
+            "stdout = {:?}", output.stdout
+        );
+
+        assert_eq!(output.stderr, "");
+    }
+
     // The image created in the next two tests was created with the
     // following command:
     //
@@ -197,6 +239,15 @@ mod tests {
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
         assert_eq!(output.stderr, "error: Invalid value: The argument 'NaN' isn't a valid value\n");
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_an_invalid_output() {
+        let output = get_failure(&["./src/tests/red.png", "--output=cheese"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(output.stderr, "error: Invalid value: The argument 'cheese' isn't a valid value\n");
     }
 
     #[test]
