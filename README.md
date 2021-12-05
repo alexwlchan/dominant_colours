@@ -66,6 +66,8 @@ It currently supports JPEGs, PNGs, and GIFs (including animated GIFs).
 
 ## Further reading
 
+-   I've written [an accompanying blog post](https://alexwlchan.net/2021/11/dominant-colours/) that talks more about the motivation behind the tool, a high-level overview of how it works, and why I chose to write it in Rust.
+
 -   [Getting a tint colour from an image with Python and k-means](https://alexwlchan.net/2019/08/finding-tint-colours-with-k-means/) – a blog post I wrote in August 2019 explaining how to find dominant colours.
 
     My original implementation was in Python.
