@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.1 - 2022-04-03
+
+Publish binaries as part of the GitHub releases.
+
+This has no feature changes.
+
 ## v1.1.0 - 2021-11-29
 
 Allow finding the dominant colour of GIFs.
