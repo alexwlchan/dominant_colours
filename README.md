@@ -9,6 +9,9 @@ It prints their hex codes to the terminal, along with a preview of the colour (i
 
 ## Installation
 
+You can download compiled binaries from the [GitHub releases](https://github.com/alexwlchan/dominant_colours/releases).
+
+Alternatively, you can install from source.
 You need Rust installed; I recommend using [Rustup].
 Then clone this repository and compile the code:
 
