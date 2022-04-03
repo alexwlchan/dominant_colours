@@ -12,31 +12,30 @@ mod get_bytes;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
-    let matches =
-        App::new("dominant_colours")
-            .version(VERSION)
-            .author("Alex Chan <alex@alexwlchan.net>")
-            .about("Find the dominant colours in an image")
-            .arg(
-                Arg::with_name("PATH")
-                    .help("path to the image to inspect")
-                    .required(true)
-                    .index(1)
-            )
-            .arg(
-                Arg::with_name("MAX-COLOURS")
-                    .long("max-colours")
-                    .help("how many colours to find")
-                    .default_value("5")
-                    .takes_value(true)
-            )
-            .arg(
-                Arg::with_name("no-palette")
-                    .long("no-palette")
-                    .help("Just print the hex values, not colour previews")
-                    .takes_value(false)
-            )
-            .get_matches();
+    let matches = App::new("dominant_colours")
+        .version(VERSION)
+        .author("Alex Chan <alex@alexwlchan.net>")
+        .about("Find the dominant colours in an image")
+        .arg(
+            Arg::with_name("PATH")
+                .help("path to the image to inspect")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            Arg::with_name("MAX-COLOURS")
+                .long("max-colours")
+                .help("how many colours to find")
+                .default_value("5")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("no-palette")
+                .long("no-palette")
+                .help("Just print the hex values, not colour previews")
+                .takes_value(false),
+        )
+        .get_matches();
 
     // This .unwrap() is safe because "path" is a required param
     let path = matches.value_of("PATH").unwrap();
@@ -68,7 +67,8 @@ fn main() {
 
     let result = get_kmeans_hamerly(max_colours, max_iterations, converge, verbose, &lab, seed);
 
-    let rgb = &result.centroids
+    let rgb = &result
+        .centroids
         .iter()
         .map(|x| Srgb::from(*x).into_format())
         .collect::<Vec<Srgb<u8>>>();
@@ -82,7 +82,10 @@ fn main() {
         if matches.is_present("no-palette") {
             println!("{}", display_value);
         } else {
-            println!("\x1B[38;2;{};{};{}m▇ {}\x1B[0m", c.red, c.green, c.blue, display_value);
+            println!(
+                "\x1B[38;2;{};{};{}m▇ {}\x1B[0m",
+                c.red, c.green, c.blue, display_value
+            );
         }
     }
 }
@@ -104,9 +107,10 @@ mod tests {
         assert_eq!(output.exit_code, 0);
 
         assert!(
-            output.stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n" ||
-            output.stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
-            "stdout = {:?}", output.stdout
+            output.stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n"
+                || output.stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
+            "stdout = {:?}",
+            output.stdout
         );
 
         assert_eq!(output.stderr, "");
@@ -137,9 +141,9 @@ mod tests {
         assert_eq!(output.exit_code, 0);
 
         assert!(
-            output.stdout == "#ff0000\n" ||
-            output.stdout == "#fe0000\n",
-            "stdout = {:?}", output.stdout
+            output.stdout == "#ff0000\n" || output.stdout == "#fe0000\n",
+            "stdout = {:?}",
+            output.stdout
         );
 
         assert_eq!(output.stderr, "");
@@ -149,14 +153,24 @@ mod tests {
     fn it_defaults_to_five_colours() {
         let output = get_success(&["./src/tests/noise.jpg"]);
 
-        assert_eq!(output.stdout.matches("\n").count(), 5, "stdout = {:?}", output.stdout);
+        assert_eq!(
+            output.stdout.matches("\n").count(),
+            5,
+            "stdout = {:?}",
+            output.stdout
+        );
     }
 
     #[test]
     fn it_lets_you_choose_the_max_colours() {
         let output = get_success(&["./src/tests/noise.jpg", "--max-colours=8"]);
 
-        assert_eq!(output.stdout.matches("\n").count(), 8, "stdout = {:?}", output.stdout);
+        assert_eq!(
+            output.stdout.matches("\n").count(),
+            8,
+            "stdout = {:?}",
+            output.stdout
+        );
     }
 
     // The image created in the next two tests was created with the
@@ -169,14 +183,24 @@ mod tests {
     fn it_looks_at_multiple_frames_in_an_animated_gif() {
         let output = get_success(&["./src/tests/animated_squares.gif"]);
 
-        assert_eq!(output.stdout.matches("\n").count(), 2, "stdout = {:?}", output.stdout);
+        assert_eq!(
+            output.stdout.matches("\n").count(),
+            2,
+            "stdout = {:?}",
+            output.stdout
+        );
     }
 
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif_uppercase() {
         let output = get_success(&["./src/tests/animated_upper_squares.GIF"]);
 
-        assert_eq!(output.stdout.matches("\n").count(), 2, "stdout = {:?}", output.stdout);
+        assert_eq!(
+            output.stdout.matches("\n").count(),
+            2,
+            "stdout = {:?}",
+            output.stdout
+        );
     }
 
     #[test]
@@ -185,7 +209,10 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "error: Invalid value: The argument 'NaN' isn't a valid value\n");
+        assert_eq!(
+            output.stderr,
+            "error: Invalid value: The argument 'NaN' isn't a valid value\n"
+        );
     }
 
     #[test]
@@ -212,7 +239,10 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "The file extension `.\"md\"` was not recognized as an image format\n");
+        assert_eq!(
+            output.stderr,
+            "The file extension `.\"md\"` was not recognized as an image format\n"
+        );
     }
 
     #[test]
@@ -249,12 +279,7 @@ mod tests {
 
     fn get_failure(args: &[&str]) -> DcOutput {
         let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
-        let output = cmd
-            .args(args)
-            .unwrap_err()
-            .as_output()
-            .unwrap()
-            .to_owned();
+        let output = cmd.args(args).unwrap_err().as_output().unwrap().to_owned();
 
         DcOutput {
             exit_code: output.status.code().unwrap(),

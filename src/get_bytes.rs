@@ -1,8 +1,8 @@
 use std::fs::File;
 
-use image::{AnimationDecoder, Frame, DynamicImage};
 use image::codecs::gif::GifDecoder;
 use image::imageops::FilterType;
+use image::{AnimationDecoder, DynamicImage, Frame};
 
 pub fn get_bytes_for_image(path: &str) -> Vec<u8> {
     let img = match image::open(&path) {
@@ -10,7 +10,7 @@ pub fn get_bytes_for_image(path: &str) -> Vec<u8> {
         Err(e) => {
             eprintln!("{}", e);
             std::process::exit(1);
-        },
+        }
     };
 
     // Resize the image after we open it.  For this tool I'd rather get a good answer
@@ -39,7 +39,7 @@ pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
         Err(e) => {
             eprintln!("{}", e);
             std::process::exit(1);
-        },
+        }
     };
 
     let decoder = GifDecoder::new(f).ok().unwrap();
@@ -53,11 +53,7 @@ pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
     //
     // For that reason, we select a sample of up to 50 frames and use those
     // as the basis for analysis.
-    let frames: Vec<Frame> =
-        decoder
-            .into_frames()
-            .collect_frames()
-            .unwrap();
+    let frames: Vec<Frame> = decoder.into_frames().collect_frames().unwrap();
 
     // How this works: it tells us we should be looking at the nth frame.
     // Examples:
@@ -78,14 +74,11 @@ pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
         ((frames.len() as f32) / (25 as f32)) as i32
     };
 
-    let selected_frames =
-        frames
-            .iter()
-            .enumerate()
-            .filter(|(i, _)| {
-                (*i as f32 / nth_frame as f32).floor() == (*i as f32 / nth_frame as f32)
-            })
-            .map(|(_, frame)| frame);
+    let selected_frames = frames
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| (*i as f32 / nth_frame as f32).floor() == (*i as f32 / nth_frame as f32))
+        .map(|(_, frame)| frame);
 
     // Now we go through the frames and extract all the pixels.  The k-means
     // process doesn't care about position, so we can concatenate the pixels
@@ -98,12 +91,12 @@ pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
     let resize = if frames.len() == 1 { 400 } else { 100 };
 
     selected_frames
-        .map(|frame|
+        .map(|frame| {
             DynamicImage::ImageRgba8(frame.buffer().clone())
                 .resize(resize, resize, FilterType::Nearest)
                 .into_rgba8()
                 .into_raw()
-        )
+        })
         .into_iter()
         .flatten()
         .collect()
