@@ -49,7 +49,7 @@ def get_palette():
             # when running dominant_colours.
             tmp_file.flush()
 
-            result = subprocess.check_output(['dominant_colours', tmp_file.name, '--no-palette'])
+            result = subprocess.check_output(['dominant_colours', tmp_file.name, '--no-palette', '--max-colours=5'])
             colours = result.decode('utf8').strip().split('\n')
 
             with tempfile.NamedTemporaryFile(suffix='jpg') as thumbnail_file:
@@ -63,4 +63,4 @@ def get_palette():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
