@@ -1,0 +1,86 @@
+  <style>
+    .colour {
+      width: calc(250px - 1em - .5em);
+/*      text-align: center;*/
+      padding: 5px;
+      font-family: monospace;
+/*      margin: .25em;*/
+      border-radius: 5px;
+      font-size: 150%;
+
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #results {
+      margin-top: 1em;
+    }
+
+    main {
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+/*      text-align: center;*/
+    }
+
+    .thumbnail {
+      border: 1px solid #999;
+      width:  300px;
+      height: 300px;
+      padding: 10px;
+    }
+
+    img {
+      width:  300px;
+      height: 300px;
+      object-fit: contain;
+    }
+
+    .colour {
+      display: grid;
+/*      background: yellow;*/
+      grid-template-columns: 30px auto;
+      grid-gap: 12px;
+    }
+
+    .sample {
+      grid-column: 1 / 2;
+/*      background: green;*/
+    }
+
+    .label {
+      grid-column: 2 / 2;
+      height: 30px;
+/*      background: blue;*/
+    }
+
+    .sample {
+      width:  30px;
+      height: 30px;
+      border: 1px solid black;
+    }
+  </style>
+
+<main>
+  <div id="results">
+    <div class="thumbnail">
+      <img src="{{ thumbnail_data_uri }}">
+    </div>
+    <div class="palette">
+      {% for c in colours %}
+      <div class="colour">
+        <div class="sample" style="background: {{ c }}"></div>
+        <div class="label">{{ c }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <p>Try another image:</p>
+  <form action = "/palette" method = "POST"
+     enctype = "multipart/form-data">
+     <input type = "file" name = "file" />
+     <input type = "submit"/>
+  </form>
+</main>
+
