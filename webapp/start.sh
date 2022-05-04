@@ -13,9 +13,9 @@ DOWNLOAD_URL=$(curl --silent 'https://api.github.com/repos/alexwlchan/dominant_c
 curl --location "$DOWNLOAD_URL" > dominant_colours.tar.gz
 tar -xzf dominant_colours.tar.gz
 
-mv dominant_colours /usr/local/bin/dominant_colours
-chmod +x /usr/local/bin/dominant_colours
-dominant_colours --version
+mv dominant_colours
+chmod +x dominant_colours
+./dominant_colours --version
 
 if [[ "$DEBUG" == "yes" ]]
 then
