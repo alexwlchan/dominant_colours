@@ -10,8 +10,8 @@ DOWNLOAD_URL=$(curl --silent 'https://api.github.com/repos/alexwlchan/dominant_c
 )
 
 # The --location flag means we follow redirects
-curl --location "$DOWNLOAD_URL" > ~/.cargo/bin/dominant_colours.tar.gz
-tar -xzf ~/.cargo/bin/dominant_colours.tar.gz
+curl --location "$DOWNLOAD_URL" > dominant_colours.tar.gz
+tar -xzf dominant_colours.tar.gz
 
 mv dominant_colours /usr/local/bin/dominant_colours
 chmod +x /usr/local/bin/dominant_colours
