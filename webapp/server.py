@@ -6,7 +6,7 @@ import os
 import subprocess
 import tempfile
 
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request
 import wcag_contrast_ratio as contrast
 
 
@@ -35,8 +35,11 @@ def foreground_colour(hex_string):
         return "#FFFFFF"
 
 
-@app.route("/palette", methods=["POST"])
+@app.route("/palette", methods=["GET", "POST"])
 def get_palette():
+    if request.method == "GET":
+        return redirect("/")
+
     if request.method == "POST":
         uploaded_file = request.files["file"]
         _, extension = os.path.splitext(uploaded_file.filename)
