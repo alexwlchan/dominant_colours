@@ -1,0 +1,132 @@
+body {
+  margin:  0;
+  padding: 0;
+
+  /* Pattern from https://www.toptal.com/designers/subtlepatterns/awesome-pattern/ */
+  background-image: url('/static/45degreee_fabric.png');
+}
+
+main, footer {
+  max-width: 500px;
+  margin-left:  auto;
+  margin-right: auto;
+  text-align: center;
+  padding: 5px;
+
+  font: 14pt Avenir, Arial, sans-serif;
+  color: #333;
+}
+
+footer {
+  font-size: 9pt;
+  color: #aaa;
+}
+
+a, a:visited {
+  color: #555;
+}
+
+footer a, footer a:visited {
+  color: #888;
+}
+
+a:hover {
+  background: #ccc;
+}
+
+#results {
+  display: grid;
+  grid-template-columns: 325px 70px auto;
+  grid-template-rows: repeat(5, 56px);
+  grid-gap: 5px;
+  height: 300px;
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.thumbnail {
+  grid-row: 1 / span 5;
+  grid-column: 1 / 3;
+  width:  300px;
+  height: 300px;
+}
+
+img {
+  width:  100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.sample {
+  grid-column: 1 / 2;
+}
+
+.label {
+  font-family: monospace;
+  height:      56px;
+  line-height: 56px;
+  text-align: left;
+}
+
+.sample {
+  width:  56px;
+  height: 56px;
+  grid-column: 2 / 3;
+}
+
+.label {
+  grid-column: 3 / 3;
+}
+
+#label_1, #sample_1 { grid-row: 1 / 5; }
+#label_2, #sample_2 { grid-row: 2 / 5; }
+#label_3, #sample_3 { grid-row: 3 / 5; }
+#label_4, #sample_4 { grid-row: 4 / 5; }
+#label_5, #sample_5 { grid-row: 5 / 5; }
+
+@media screen and (max-width: 600px) {
+  .thumbnail {
+    width:  300px;
+    height: 230px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  #results {
+    grid-template-columns: 42px auto;
+    width: 300px;
+    grid-template-rows: 240px repeat(5, 42px);
+    grid-row-gap: 10px;
+    height: auto;
+  }
+
+  .thumbnail {
+    grid-column: 1 / span 2;
+    grid-row:1 / 6;
+  }
+
+  .sample {
+    grid-column: 1 / 2;
+  }
+
+  .label {
+    grid-column: 2 / 2;
+  }
+
+  #label_1, #sample_1 { grid-row: 2 / 6; }
+  #label_2, #sample_2 { grid-row: 3 / 6; }
+  #label_3, #sample_3 { grid-row: 4 / 6; }
+  #label_4, #sample_4 { grid-row: 5 / 6; }
+  #label_5, #sample_5 { grid-row: 6 / 6; }
+
+  .label {
+    height:      42px;
+    line-height: 42px;
+  }
+
+  .sample {
+    width:  42px;
+    height: 42px;
+  }
+}

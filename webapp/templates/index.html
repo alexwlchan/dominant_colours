@@ -1,15 +1,11 @@
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{% extends "base.html" %}
 
-</head>
-   <body>
-      <form action = "/palette" method = "POST"
-         enctype = "multipart/form-data">
-         <input type = "file" name = "file" />
-         <input type = "submit"/>
-      </form>
-   </body>
-</html>
+{% block content %}
+  <p>upload an image to analyse:</p>
+
+  <form action="/palette" method="POST"
+     enctype="multipart/form-data">
+     <input type="file" name="file" accept=".gif,.jpg,.jpeg,.png"/>
+     <input type="submit"/>
+  </form>
+{% endblock %}

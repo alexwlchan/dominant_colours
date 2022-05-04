@@ -13,9 +13,12 @@ import wcag_contrast_ratio as contrast
 app = Flask(__name__)
 
 
+VERSION = subprocess.check_output(["dominant_colours", "--version"]).decode("utf8")
+
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", version=VERSION)
 
 
 @app.template_filter("foreground_colour")
@@ -27,9 +30,9 @@ def foreground_colour(hex_string):
     ratio = contrast.rgb((red / 255, green / 255, blue / 255), (0, 0, 0))
 
     if contrast.passes_AA(ratio):
-        return '#000000'
+        return "#000000"
     else:
-        return '#FFFFFF'
+        return "#FFFFFF"
 
 
 @app.route("/palette", methods=["POST"])
@@ -49,18 +52,35 @@ def get_palette():
             # when running dominant_colours.
             tmp_file.flush()
 
-            result = subprocess.check_output(['dominant_colours', tmp_file.name, '--no-palette', '--max-colours=5'])
-            colours = result.decode('utf8').strip().split('\n')
+            result = subprocess.check_output(
+                ["dominant_colours", tmp_file.name, "--no-palette", "--max-colours=5"]
+            )
+            colours = result.decode("utf8").strip().split("\n")
 
-            with tempfile.NamedTemporaryFile(suffix='jpg') as thumbnail_file:
-                subprocess.check_call(['convert', tmp_file.name, '-resize', '600x600', thumbnail_file.name])
+            with tempfile.NamedTemporaryFile(suffix="jpg") as thumbnail_file:
+                subprocess.check_call(
+                    [
+                        "convert",
+                        tmp_file.name,
+                        "-resize",
+                        "600x600",
+                        thumbnail_file.name,
+                    ]
+                )
                 thumbnail_file.seek(0)
                 thumbnail = thumbnail_file.read()
 
-            thumbnail_data_uri = (b'data:image/jpg;base64,' + base64.b64encode(thumbnail)).decode('ascii')
+            thumbnail_data_uri = (
+                b"data:image/jpg;base64," + base64.b64encode(thumbnail)
+            ).decode("ascii")
 
-            return render_template('palette.html', colours=colours, thumbnail_data_uri=thumbnail_data_uri)
+            return render_template(
+                "palette.html",
+                colours=colours,
+                thumbnail_data_uri=thumbnail_data_uri,
+                version=VERSION,
+            )
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host="0.0.0.0")
