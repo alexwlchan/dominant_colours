@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p>upload an image to analyse:</p>
+
+  <form action="/palette" method="POST"
+     enctype="multipart/form-data">
+     <input type="file" name="file" accept=".gif,.jpg,.jpeg,.png"/>
+     <input type="submit"/>
+  </form>
+{% endblock %}

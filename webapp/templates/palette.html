@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div id="results">
+    <div class="thumbnail">
+      <img src="{{ thumbnail_data_uri }}">
+    </div>
+    {% for c in colours %}
+    <div class="sample" id="sample_{{ loop.index }}" style="background: {{ c }};"></div>
+    <div class="label" id="label_{{ loop.index }}">{{ c }}</div>
+    {% endfor %}
+  </div>
+
+  <p><a href="/">try another image</a></p>
+{% endblock %}
