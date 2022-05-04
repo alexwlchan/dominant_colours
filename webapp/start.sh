@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
 
 set -o errexit
-set -o nounset
 
 pip3 install -r requirements.txt
 
-DOWNLOAD_URL=$(curl --silent 'https://api.github.com/repos/alexwlchan/dominant_colours/releases/latest' \
-  | jq -r ' .assets | map(.browser_download_url) | map(select(test(".*linux.*")))[0]'
-)
+DOWNLOAD_URL="https://github.com/alexwlchan/dominant_colours/releases/download/v1.1.1/dominant_colours-x86_64-unknown-linux-musl.tar.gz"
+
+# Remove any existing downloads
+rm -f dominant_colours*
 
 # The --location flag means we follow redirects
 curl --location "$DOWNLOAD_URL" > dominant_colours.tar.gz
+md5sum dominant_colours.tar.gz
 tar -xzf dominant_colours.tar.gz
 
 chmod +x dominant_colours
+md5sum dominant_colours
 ./dominant_colours --version
+
+# Make sure we can find dominant_colours in the app
+export PATH=$(pwd):$PATH
 
 if [[ "$DEBUG" == "yes" ]]
 then
