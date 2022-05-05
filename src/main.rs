@@ -254,6 +254,18 @@ mod tests {
         assert_eq!(output.stderr, "The image format Tiff is not supported\n");
     }
 
+    #[test]
+    fn it_fails_if_you_pass_a_malformed_image() {
+        let output = get_failure(&["./src/tests/malformed.txt.png"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(
+            output.stderr,
+            "Format error decoding Png: invalid signature\n"
+        );
+    }
+
     struct DcOutput {
         exit_code: i32,
         stdout: String,
