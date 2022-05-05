@@ -260,7 +260,10 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "Format error decoding Png: invalid signature\n");
+        assert_eq!(
+            output.stderr,
+            "Format error decoding Png: invalid signature\n"
+        );
     }
 
     struct DcOutput {
