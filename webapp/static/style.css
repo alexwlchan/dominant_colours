@@ -130,3 +130,12 @@ img {
     height: 42px;
   }
 }
+
+.errors {
+  background: rgba(208, 28, 17, 0.2);
+  padding: 1em;
+  border: 3px solid #d01c11;
+  color: #d01c11;
+  font-weight: 500;
+  border-radius: 5px;
+}

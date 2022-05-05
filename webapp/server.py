@@ -3,14 +3,17 @@
 import base64
 import colorsys
 import os
+import secrets
 import subprocess
+import sys
 import tempfile
 
-from flask import Flask, redirect, render_template, request
+from flask import Flask, flash, redirect, render_template, request
 import wcag_contrast_ratio as contrast
 
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex()
 
 
 VERSION = subprocess.check_output(["dominant_colours", "--version"]).decode("utf8")
@@ -55,10 +58,20 @@ def get_palette():
             # when running dominant_colours.
             tmp_file.flush()
 
-            result = subprocess.check_output(
-                ["dominant_colours", tmp_file.name, "--no-palette", "--max-colours=5"]
-            )
-            colours = result.decode("utf8").strip().split("\n")
+            proc = subprocess.Popen([
+                'dominant_colours', tmp_file.name, '--no-palette', '--max-colours=5'
+            ],stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+            stdout, stderr = proc.communicate()
+            return_code = proc.poll()
+
+            if return_code != 0:
+                stderr = stderr.decode(sys.stdin.encoding)
+                flash(f'Something went wrong:<br/>{stderr}')
+                return redirect('/')
+
+            stdout = stdout.decode(sys.stdin.encoding)
+            colours = stdout.strip().split("\n")
 
             with tempfile.NamedTemporaryFile(suffix="jpg") as thumbnail_file:
                 subprocess.check_call(
