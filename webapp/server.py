@@ -24,18 +24,36 @@ def index():
     return render_template("index.html", version=VERSION)
 
 
-@app.template_filter("foreground_colour")
-def foreground_colour(hex_string):
-    red = int(hex_string[1:3], 16)
-    green = int(hex_string[3:5], 16)
-    blue = int(hex_string[5:7], 16)
+@app.template_filter("usable_colours")
+def usable_colours(colours):
+    result = []
 
-    ratio = contrast.rgb((red / 255, green / 255, blue / 255), (0, 0, 0))
+    for hex_string in colours:
+        r = red(hex_string)
+        g = green(hex_string)
+        b = blue(hex_string)
 
-    if contrast.passes_AA(ratio):
-        return "#000000"
-    else:
-        return "#FFFFFF"
+        ratio = contrast.rgb((r / 255, g / 255, b / 255), (1, 1, 1))
+
+        if contrast.passes_AA(ratio):
+            result.append(hex_string)
+
+    return result
+
+
+@app.template_filter("red")
+def red(hex_string):
+    return int(hex_string[1:3], 16)
+
+
+@app.template_filter("green")
+def green(hex_string):
+    return int(hex_string[3:5], 16)
+
+
+@app.template_filter("blue")
+def blue(hex_string):
+    return int(hex_string[5:7], 16)
 
 
 @app.route("/palette", methods=["GET", "POST"])
@@ -58,17 +76,18 @@ def get_palette():
             # when running dominant_colours.
             tmp_file.flush()
 
-            proc = subprocess.Popen([
-                'dominant_colours', tmp_file.name, '--no-palette', '--max-colours=5'
-            ],stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+            proc = subprocess.Popen(
+                ["dominant_colours", tmp_file.name, "--no-palette", "--max-colours=5"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             stdout, stderr = proc.communicate()
             return_code = proc.poll()
 
             if return_code != 0:
                 stderr = stderr.decode(sys.stdin.encoding)
-                flash(f'Something went wrong:<br/>{stderr}')
-                return redirect('/')
+                flash(f"Something went wrong:<br/>{stderr}")
+                return redirect("/")
 
             stdout = stdout.decode(sys.stdin.encoding)
             colours = stdout.strip().split("\n")

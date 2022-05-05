@@ -11,5 +11,21 @@
     {% endfor %}
   </div>
 
+  {#
+    Style the links based on one of the tint colours from this image.
+  #}
+  {% if colours | usable_colours | length > 0 %}
+    {% set tint_colour = colours | usable_colours | random %}
+    <style>
+      a, a:visited {
+        color: {{ tint_colour }};
+      }
+
+      a:hover {
+        background: rgba({{ tint_colour | red }}, {{ tint_colour | green }}, {{ tint_colour | blue }}, 0.3);
+      }
+    </style>
+  {% endif %}
+
   <p><a href="/">try another image</a></p>
 {% endblock %}
