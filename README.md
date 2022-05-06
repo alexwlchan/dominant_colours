@@ -1,9 +1,11 @@
 # dominant_colours
 
-This is a command-line tool for finding the dominant colours of an image.
+This is a tool for finding the dominant colours of an image.
 It prints their hex codes to the terminal, along with a preview of the colour (in terminals that support ANSI escape codes):
 
 ![Left: a photo of a red and white lighthouse set against a blue sky. Right: the terminal output of three invocations of 'dominant_colours' against 'lighthouse.jpg', with hex colours printed to the terminal.](screenshot.png)
+
+It's available both as a command-line tool and [as a web app](./webapp).
 
 
 
