@@ -20,6 +20,7 @@ main, footer {
 footer {
   font-size: 9pt;
   color: #aaa;
+  line-height: 1.55em;
 }
 
 a, a:visited {
@@ -28,6 +29,10 @@ a, a:visited {
 
 footer a, footer a:visited {
   color: #888;
+}
+
+footer a:hover {
+  background: #ddd;
 }
 
 a:hover {
