@@ -21,3 +21,26 @@ I have to [compile MUSL libc-based versions][compile] of the CLI tool to get it 
 [Flask]: https://pypi.org/project/Flask/
 [Glitch]: https://glitch.com/
 [compile]: https://alexwlchan.net/2022/05/rust-on-glitch/
+
+
+
+## Development
+
+You should only need to run the web app for development; if you can install packages locally the CLI is probably a better option.
+
+1.  Install the [latest release] of the CLI
+2.  Install the Python requirements:
+
+    ```console
+    $ pip3 install -r requirements.txt
+    ```
+
+3.  Run the web server script:
+
+    ```console
+    $ python3 server.py
+    ```
+
+This will start a debug version of the web app at <http://localhost:4711>
+
+[latest release]: https://github.com/alexwlchan/dominant_colours/releases
