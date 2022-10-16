@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.3 - 2022-10-16
+
+Fix a bug when finding the dominant colour of some animated GIFs.
+
 ## v1.1.2 - 2022-10-16
 
 Add support for TIFF images.

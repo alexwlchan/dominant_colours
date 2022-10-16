@@ -108,3 +108,18 @@ pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
         .flatten()
         .collect()
 }
+
+#[cfg(test)]
+mod test {
+    use crate::get_bytes;
+
+    // This image comes from https://stacks.wellcomecollection.org/peering-through-mri-scans-of-fruit-and-veg-part-1-a2e8b07bde6f
+    //
+    // I don't remember how I got these images, but for some reason they
+    // caused v1.1.2 to fall over.  This is a test that they can still be
+    // processed correctly.
+    #[test]
+    fn it_gets_bytes_for_mri_fruit() {
+        get_bytes::get_bytes_for_gif("./src/tests/garlic.gif");
+    }
+}
