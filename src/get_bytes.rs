@@ -53,14 +53,7 @@ pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
     //
     // For that reason, we select a sample of up to 50 frames and use those
     // as the basis for analysis.
-    let frames: Vec<Frame> = match decoder.into_frames().collect_frames() {
-        Ok(f) => f,
-        Err(e) => {
-            println!("{:?}", e);
-            panic!("BOOM!");
-        },
-
-    };
+    let frames: Vec<Frame> = decoder.into_frames().collect_frames().unwrap();
 
     // How this works: it tells us we should be looking at the nth frame.
     // Examples:
