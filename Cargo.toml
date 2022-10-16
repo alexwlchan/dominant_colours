@@ -1,6 +1,6 @@
 [package]
 name = "dominant_colours"
-version = "1.1.1"
+version = "1.1.2"
 edition = "2018"
 
 [dependencies]
@@ -13,8 +13,8 @@ features = ["palette_color"]
 default-features = false
 
 [dependencies.image]
-version = "0.23"
-features = ["jpeg", "png", "gif"]
+version = "0.24"
+features = ["jpeg", "png", "gif", "tiff"]
 default-features = false
 
 [dependencies.palette]
