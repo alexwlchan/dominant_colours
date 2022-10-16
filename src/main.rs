@@ -262,7 +262,7 @@ mod tests {
         assert_eq!(output.stdout, "");
         assert_eq!(
             output.stderr,
-            "Format error decoding Png: invalid signature\n"
+            "Format error decoding Png: Invalid PNG signature.\n"
         );
     }
 
