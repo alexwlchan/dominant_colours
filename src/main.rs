@@ -135,6 +135,12 @@ mod tests {
     }
 
     #[test]
+    fn it_can_look_at_tiff_images() {
+        let output = get_success(&["./src/tests/green.tiff", "--max-colours=1"]);
+        assert_eq!(output.exit_code, 0);
+    }
+
+    #[test]
     fn it_omits_the_escape_codes_with_no_palette() {
         let output = get_success(&["./src/tests/red.png", "--max-colours=1", "--no-palette"]);
 
@@ -247,11 +253,11 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_an_unsupported_image_format() {
-        let output = get_failure(&["./src/tests/green.tiff"]);
+        let output = get_failure(&["./src/tests/purple.webp"]);
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "The image format Tiff is not supported\n");
+        assert_eq!(output.stderr, "The image format WebP is not supported\n");
     }
 
     #[test]

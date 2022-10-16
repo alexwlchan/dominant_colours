@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.2 - 2022-10-16
+
+Add support for TIFF images.
+
 ## v1.1.1 - 2022-04-03
 
 Publish binaries as part of the GitHub releases.

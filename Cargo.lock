@@ -136,7 +136,7 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "dominant_colours"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -205,6 +205,7 @@ dependencies = [
  "num-rational",
  "num-traits",
  "png",
+ "tiff",
 ]
 
 [[package]]
@@ -441,6 +442,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 dependencies = [
  "unicode-width",
+]
+
+[[package]]
+name = "tiff"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7259662e32d1e219321eb309d5f9d898b779769d81b76e762c07c8e5d38fcb65"
+dependencies = [
+ "flate2",
+ "jpeg-decoder",
+ "weezl",
 ]
 
 [[package]]
