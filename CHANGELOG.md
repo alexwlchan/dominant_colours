@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.3 - 2022-10-16
+## v1.1.3 - 2022-10-17
 
 Fix a bug when finding the dominant colour of some animated GIFs.
 
