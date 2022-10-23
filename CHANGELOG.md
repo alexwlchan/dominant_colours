@@ -2,7 +2,15 @@
 
 ## v1.1.6 - 2022-10-23
 
-Provide precompiled binaries for more targets.
+Provide precompiled binaries for more targets, so the following targets are now supported:
+
+* Macs on Intel and Apple Silicon
+* Windows on Intel
+* Linux on Intel, both GNU and MUSL (Alpine-compatible) binaries
+
+There are no feature/bugfix changes from v1.1.3.
+
+(Note: v1.1.4 and v1.1.5 were abortive releases to get the new binaries working, and have been removed to avoid confusion.
 
 ## v1.1.3 - 2022-10-17
 
