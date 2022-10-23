@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.1.4 - 2022-10-23
+## v1.1.5 - 2022-10-23
 
 Provide precompiled binaries for more targets.
 
