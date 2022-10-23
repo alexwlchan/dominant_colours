@@ -36,7 +36,7 @@ jobs:
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: dominant_colours
-          tar: unix
+          tar: all
           zip: windows
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
