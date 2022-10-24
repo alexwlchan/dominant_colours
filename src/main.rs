@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 
 #[macro_use]
 extern crate clap;
@@ -8,6 +8,19 @@ use palette::{FromColor, IntoColor, Lab, Pixel, Srgb, Srgba};
 
 mod cli;
 mod get_bytes;
+
+#[derive(Debug)]
+pub struct Command {
+    pub path: String,
+    pub no_palette: bool,
+    pub options: CommandOptions,
+}
+
+#[derive(Debug)]
+pub enum CommandOptions {
+    GetDominantColours { max_colours: usize },
+    GetBestColourWith { compared_to: palette::Srgb },
+}
 
 fn main() {
     let matches = cli::app().get_matches();
@@ -19,6 +32,12 @@ fn main() {
     let max_colours: usize = *matches
         .get_one::<usize>("MAX-COLOURS")
         .expect("`max-colours` is required");
+
+    let command = Command {
+        path: path.to_owned(),
+        no_palette: matches.get_flag("no-palette"),
+        options: CommandOptions::GetDominantColours { max_colours },
+    };
 
     // There's different code for fetching bytes from GIF images because
     // GIFs are often animated, and we want a selection of frames.
@@ -36,6 +55,17 @@ fn main() {
         .map(|x| x.into_format::<_, f32>().into_color())
         .collect();
 
+    let rgb: Vec<Srgb<u8>> = match command.options {
+        CommandOptions::GetDominantColours { max_colours } => get_dominant_colours(lab, max_colours),
+        CommandOptions::GetBestColourWith { compared_to } => vec![],
+    };
+
+    for c in rgb {
+        print_hex_string(c, command.no_palette);
+    }
+}
+
+fn get_dominant_colours(lab: Vec<Lab>, max_colours: usize) -> Vec<Srgb<u8>> {
     let max_iterations = 20;
     let converge = 1.0;
     let verbose = false;
@@ -43,26 +73,28 @@ fn main() {
 
     let result = get_kmeans_hamerly(max_colours, max_iterations, converge, verbose, &lab, seed);
 
-    let rgb = &result
+    let rgb: Vec<Srgb<u8>> = result
         .centroids
         .iter()
         .map(|x| Srgb::from_color(*x).into_format())
         .collect::<Vec<Srgb<u8>>>();
 
+    rgb
+}
+
+fn print_hex_string(c: Srgb<u8>, no_palette: bool) -> () {
     // This uses ANSI escape sequences and Unicode block elements to print
     // a palette of hex strings which are coloured to match.
     // See https://alexwlchan.net/2021/04/coloured-squares/
-    for c in rgb {
-        let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+    let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
 
-        if matches.get_flag("no-palette") {
-            println!("{}", display_value);
-        } else {
-            println!(
-                "\x1B[38;2;{};{};{}m▇ {}\x1B[0m",
-                c.red, c.green, c.blue, display_value
-            );
-        }
+    if no_palette {
+        println!("{}", display_value);
+    } else {
+        println!(
+            "\x1B[38;2;{};{};{}m▇ {}\x1B[0m",
+            c.red, c.green, c.blue, display_value
+        );
     }
 }
 
