@@ -12,9 +12,13 @@ mod get_bytes;
 fn main() {
     let matches = cli::app().get_matches();
 
-    let path = matches.get_one::<String>("PATH").expect("`path` is required");
+    let path = matches
+        .get_one::<String>("PATH")
+        .expect("`path` is required");
 
-    let max_colours: usize = *matches.get_one::<usize>("MAX-COLOURS").expect("`max-colours` is required");
+    let max_colours: usize = *matches
+        .get_one::<usize>("MAX-COLOURS")
+        .expect("`max-colours` is required");
 
     // There's different code for fetching bytes from GIF images because
     // GIFs are often animated, and we want a selection of frames.
