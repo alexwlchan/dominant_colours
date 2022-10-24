@@ -3,39 +3,14 @@
 #[macro_use]
 extern crate clap;
 
-use clap::{App, Arg};
 use kmeans_colors::get_kmeans_hamerly;
 use palette::{Lab, Pixel, Srgb, Srgba};
 
+mod cli;
 mod get_bytes;
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-
 fn main() {
-    let matches = App::new("dominant_colours")
-        .version(VERSION)
-        .author("Alex Chan <alex@alexwlchan.net>")
-        .about("Find the dominant colours in an image")
-        .arg(
-            Arg::with_name("PATH")
-                .help("path to the image to inspect")
-                .required(true)
-                .index(1),
-        )
-        .arg(
-            Arg::with_name("MAX-COLOURS")
-                .long("max-colours")
-                .help("how many colours to find")
-                .default_value("5")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("no-palette")
-                .long("no-palette")
-                .help("Just print the hex values, not colour previews")
-                .takes_value(false),
-        )
-        .get_matches();
+    let matches = cli::app().get_matches();
 
     // This .unwrap() is safe because "path" is a required param
     let path = matches.value_of("PATH").unwrap();
@@ -213,11 +188,11 @@ mod tests {
     fn it_fails_if_you_pass_an_invalid_max_colours() {
         let output = get_failure(&["./src/tests/red.png", "--max-colours=NaN"]);
 
-        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.exit_code, 2);
         assert_eq!(output.stdout, "");
         assert_eq!(
             output.stderr,
-            "error: Invalid value: The argument 'NaN' isn't a valid value\n"
+            "error: Invalid value \"NaN\" for 'MAX-COLOURS': The argument 'NaN' isn't a valid value for 'MAX-COLOURS': invalid digit found in string\n"
         );
     }
 
