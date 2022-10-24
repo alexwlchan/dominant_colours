@@ -31,7 +31,7 @@ fn main() {
         .collect();
 
     let rgb: Vec<Srgb<u8>> = match action.options {
-        models::ActionOptions::GetDominantColours { max_colours } => get_dominant_colours(lab, max_colours),
+        models::ActionOptions::GetDominantColours => get_dominant_colours(lab, action.max_colours),
         models::ActionOptions::GetBestColourWith { compared_to } => vec![],
     };
 

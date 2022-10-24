@@ -1,4 +1,6 @@
+use std::str::FromStr;
 use clap::{Arg, ArgAction, Command};
+use palette::Srgb;
 
 use crate::models::{Action, ActionOptions};
 
@@ -16,6 +18,12 @@ pub fn app() -> clap::Command {
                 .index(1),
         )
         .arg(
+            Arg::new("no-palette")
+                .long("no-palette")
+                .help("just print the hex values, not colour previews")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
             Arg::new("MAX-COLOURS")
                 .long("max-colours")
                 .help("how many colours to find")
@@ -23,10 +31,9 @@ pub fn app() -> clap::Command {
                 .default_value("5"),
         )
         .arg(
-            Arg::new("no-palette")
-                .long("no-palette")
-                .help("Just print the hex values, not colour previews")
-                .action(ArgAction::SetTrue),
+            Arg::new("COMPARED-TO")
+                .long("compared-to")
+                .help("find the colour from the image that looks best against this colour")
         )
 }
 
@@ -39,10 +46,18 @@ pub fn parse_arguments(matches: clap::ArgMatches) -> Action {
         .get_one::<usize>("MAX-COLOURS")
         .expect("`max-colours` is required");
 
+    let compared_to = match matches.get_one::<String>("COMPARED-TO") {
+        Some(s) => Some(Srgb::from_str(s).unwrap_or_else(|e| e.exit())),
+        None    => None
+    };
+
+    println!("{:?}", compared_to);
+
     let command = Action {
         path: path.to_owned(),
         no_palette: matches.get_flag("no-palette"),
-        options: ActionOptions::GetDominantColours { max_colours },
+        max_colours,
+        options: ActionOptions::GetDominantColours,
     };
 
     command
