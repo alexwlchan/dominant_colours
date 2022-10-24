@@ -9,5 +9,5 @@ pub struct Action {
 #[derive(Debug)]
 pub enum ActionOptions {
     GetDominantColours,
-    GetBestColourWith { compared_to: palette::Srgb },
+    GetBestColourWith { compared_to: palette::Srgb<u8> },
 }

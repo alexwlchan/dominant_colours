@@ -4,7 +4,9 @@
 extern crate clap;
 
 use kmeans_colors::get_kmeans_hamerly;
-use palette::{FromColor, IntoColor, Lab, Pixel, Srgb, Srgba};
+use ordered_float::OrderedFloat;
+use palette::{FromColor, Hsv, IntoColor, Lab, Pixel, RelativeContrast, Srgb, Srgba};
+use std::str::FromStr;
 
 mod cli;
 mod get_bytes;
@@ -30,14 +32,66 @@ fn main() {
         .map(|x| x.into_format::<_, f32>().into_color())
         .collect();
 
+    let dominant_colours = get_dominant_colours(lab, action.max_colours);
+
     let rgb: Vec<Srgb<u8>> = match action.options {
-        models::ActionOptions::GetDominantColours => get_dominant_colours(lab, action.max_colours),
-        models::ActionOptions::GetBestColourWith { compared_to } => vec![],
+        models::ActionOptions::GetDominantColours => dominant_colours,
+        models::ActionOptions::GetBestColourWith { compared_to } => {
+            vec![find_best_colour_compared_to(dominant_colours, compared_to)]
+        }
     };
 
     for c in rgb {
         print_hex_string(c, action.no_palette);
     }
+}
+
+/** Find the "best" colour from a set of candidates to use with
+ * a given background colour.
+ *
+ * Here "best" is defined by two things:
+ *
+ *    - having at least a 4.5:1 contrast ratio, which passes WCAG AA
+ *    - having the max possible saturation, to select for bright/fun colours
+ *
+ */
+fn find_best_colour_compared_to(rgb: Vec<Srgb<u8>>, background_color: Srgb<u8>) -> Srgb<u8> {
+    // Every colour in the RGB space has a contrast ratio of 4.5:1 with
+    // at least one of black or white, so we can use one of these as an
+    // extreme if we have to.
+    //
+    // Note: you could modify the dominant colours until one of them
+    // has sufficient contrast, but that's omitted here because it adds
+    // a lot of complexity for a relatively unusual case.
+    let black_and_white: Vec<Srgb<u8>> = vec![
+        Srgb::<u8>::from_str("#ffffff").unwrap(),
+        Srgb::<u8>::from_str("#000000").unwrap(),
+    ];
+    let candidates = [rgb, black_and_white].concat();
+
+    // Now filter out all the colours that have a contrast ratio with
+    // the background which is less than 4.5:1.
+    let high_contrast_candidates: Vec<Srgb<u8>> = candidates
+        .into_iter()
+        .filter(|c| {
+            RelativeContrast::get_contrast_ratio(
+                &c.into_format::<f32>(),
+                &background_color.into_format::<f32>(),
+            ) >= 4.5
+        })
+        .collect();
+
+    // And now let's maximise for saturation.  We know the final unwrap()
+    // is safe because `high_contrast_candidates` will always be non-empty --
+    // that's from adding black and white earlier.
+    assert!(
+        high_contrast_candidates.len() > 0,
+        "found no colours with sufficient contrast"
+    );
+    high_contrast_candidates
+        .into_iter()
+        .max_by_key(|rgb| OrderedFloat(Hsv::from_color(rgb.into_format::<f32>()).saturation))
+        .unwrap()
 }
 
 fn get_dominant_colours(lab: Vec<Lab>, max_colours: usize) -> Vec<Srgb<u8>> {
@@ -190,6 +244,49 @@ mod tests {
             "stdout = {:?}",
             output.stdout
         );
+    }
+
+    #[test]
+    fn it_finds_the_best_colour_against_a_background() {
+        // This is an image with a grey stripe and a green stripe; both
+        // have sufficient contrast with a black background, so we check
+        // it picks the more poppy green.
+        let output = get_success(&[
+            "./src/tests/split-grey-green.png",
+            "--no-palette",
+            "--compared-to",
+            "#000000",
+        ]);
+
+        assert_eq!(output.stdout, "#8efa00\n");
+    }
+
+    #[test]
+    fn it_picks_black_if_no_colour_is_dark_enough() {
+        // This is an image with two light grey stripes, neither of which
+        // have enough contrast -- so we should pick black instead.
+        let output = get_success(&[
+            "./src/tests/split-grey-grey-light.png",
+            "--no-palette",
+            "--compared-to",
+            "#ffffff",
+        ]);
+
+        assert_eq!(output.stdout, "#000000\n");
+    }
+
+    #[test]
+    fn it_picks_white_if_no_colour_is_light_enough() {
+        // This is an image with two dark grey stripes, neither of which
+        // have enough contrast -- so we should pick white instead.
+        let output = get_success(&[
+            "./src/tests/split-grey-grey-dark.png",
+            "--no-palette",
+            "--compared-to",
+            "#000000",
+        ]);
+
+        assert_eq!(output.stdout, "#ffffff\n");
     }
 
     #[test]

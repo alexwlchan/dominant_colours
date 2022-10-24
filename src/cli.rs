@@ -1,6 +1,6 @@
-use std::str::FromStr;
 use clap::{Arg, ArgAction, Command};
 use palette::Srgb;
+use std::str::FromStr;
 
 use crate::models::{Action, ActionOptions};
 
@@ -18,12 +18,6 @@ pub fn app() -> clap::Command {
                 .index(1),
         )
         .arg(
-            Arg::new("no-palette")
-                .long("no-palette")
-                .help("just print the hex values, not colour previews")
-                .action(ArgAction::SetTrue),
-        )
-        .arg(
             Arg::new("MAX-COLOURS")
                 .long("max-colours")
                 .help("how many colours to find")
@@ -31,33 +25,45 @@ pub fn app() -> clap::Command {
                 .default_value("5"),
         )
         .arg(
+            Arg::new("no-palette")
+                .long("no-palette")
+                .help("just print the hex values, not colour previews")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
             Arg::new("COMPARED-TO")
                 .long("compared-to")
                 .help("find the colour from the image that looks best against this colour")
+                .value_parser(Srgb::<u8>::from_str),
         )
 }
 
 pub fn parse_arguments(matches: clap::ArgMatches) -> Action {
     let path = matches
         .get_one::<String>("PATH")
-        .expect("`path` is required");
+        .expect("`path` is required")
+        .to_owned();
+
+    let no_palette = matches.get_flag("no-palette");
 
     let max_colours: usize = *matches
         .get_one::<usize>("MAX-COLOURS")
         .expect("`max-colours` is required");
 
-    let compared_to = match matches.get_one::<String>("COMPARED-TO") {
-        Some(s) => Some(Srgb::from_str(s).unwrap_or_else(|e| e.exit())),
-        None    => None
+    let compared_to = matches.get_one::<Srgb<u8>>("COMPARED-TO");
+
+    let options = match compared_to {
+        Some(compared_to) => ActionOptions::GetBestColourWith {
+            compared_to: compared_to.to_owned(),
+        },
+        None => ActionOptions::GetDominantColours,
     };
 
-    println!("{:?}", compared_to);
-
     let command = Action {
-        path: path.to_owned(),
-        no_palette: matches.get_flag("no-palette"),
+        path,
+        no_palette,
         max_colours,
-        options: ActionOptions::GetDominantColours,
+        options,
     };
 
     command
