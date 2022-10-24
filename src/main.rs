@@ -12,19 +12,16 @@ mod get_bytes;
 fn main() {
     let matches = cli::app().get_matches();
 
-    // This .unwrap() is safe because "path" is a required param
-    let path = matches.value_of("PATH").unwrap();
+    let path = matches.get_one::<String>("PATH").expect("`path` is required");
 
-    // Get the max colours as a number.
-    // See https://github.com/clap-rs/clap/blob/v2.33.1/examples/12_typed_values.rs
-    let max_colours = value_t!(matches, "MAX-COLOURS", usize).unwrap_or_else(|e| e.exit());
+    let max_colours: usize = *matches.get_one::<usize>("MAX-COLOURS").expect("`max-colours` is required");
 
     // There's different code for fetching bytes from GIF images because
     // GIFs are often animated, and we want a selection of frames.
     let img_bytes = if path.to_lowercase().ends_with(".gif") {
-        get_bytes::get_bytes_for_gif(path)
+        get_bytes::get_bytes_for_gif(&path)
     } else {
-        get_bytes::get_bytes_for_image(path)
+        get_bytes::get_bytes_for_image(&path)
     };
 
     // This is based on code from the kmeans-colors binary, but with a bunch of
@@ -54,7 +51,7 @@ fn main() {
     for c in rgb {
         let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
 
-        if matches.is_present("no-palette") {
+        if matches.get_flag("no-palette") {
             println!("{}", display_value);
         } else {
             println!(
@@ -192,7 +189,7 @@ mod tests {
         assert_eq!(output.stdout, "");
         assert_eq!(
             output.stderr,
-            "error: Invalid value \"NaN\" for 'MAX-COLOURS': The argument 'NaN' isn't a valid value for 'MAX-COLOURS': invalid digit found in string\n"
+            "error: Invalid value 'NaN' for '--max-colours <MAX-COLOURS>': invalid digit found in string\n\nFor more information try '--help'\n"
         );
     }
 
