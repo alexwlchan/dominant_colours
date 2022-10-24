@@ -4,7 +4,7 @@
 extern crate clap;
 
 use kmeans_colors::get_kmeans_hamerly;
-use palette::{Lab, Pixel, Srgb, Srgba};
+use palette::{FromColor, IntoColor, Lab, Pixel, Srgb, Srgba};
 
 mod cli;
 mod get_bytes;
@@ -30,10 +30,10 @@ fn main() {
 
     // This is based on code from the kmeans-colors binary, but with a bunch of
     // the options stripped out.
-    // See https://github.com/okaneco/kmeans-colors/blob/9960c55dbc572e08d564dc341d6fd7e66fa79b5e/src/bin/kmeans_colors/app.rs
+    // See https://github.com/okaneco/kmeans-colors/blob/0.5.0/src/bin/kmeans_colors/app.rs
     let lab: Vec<Lab> = Srgba::from_raw_slice(&img_bytes)
         .iter()
-        .map(|x| x.into_format().into())
+        .map(|x| x.into_format::<_, f32>().into_color())
         .collect();
 
     let max_iterations = 20;
@@ -46,7 +46,7 @@ fn main() {
     let rgb = &result
         .centroids
         .iter()
-        .map(|x| Srgb::from(*x).into_format())
+        .map(|x| Srgb::from_color(*x).into_format())
         .collect::<Vec<Srgb<u8>>>();
 
     // This uses ANSI escape sequences and Unicode block elements to print

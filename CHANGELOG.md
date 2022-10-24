@@ -1,8 +1,14 @@
 # Changelog
 
+## v1.1.8 - 2022-10-24
+
+More internal refactoring to use newer versions of kmeans-colors and palette.
+
+This has no feature changes.
+
 ## v1.1.7 - 2022-10-24
 
-Some internal refactoring to use newer versions of libraries.
+Some internal refactoring to use a newer versions of clap.
 
 This has no feature changes.
 

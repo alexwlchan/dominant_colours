@@ -1,6 +1,6 @@
 [package]
 name = "dominant_colours"
-version = "1.1.7"
+version = "1.1.8"
 edition = "2018"
 
 [dependencies]
@@ -8,7 +8,7 @@ assert_cmd = "2.0.5"
 clap = "4.0.18"
 
 [dependencies.kmeans_colors]
-version = "0.4.0"
+version = "0.5.0"
 features = ["palette_color"]
 default-features = false
 
@@ -18,6 +18,6 @@ features = ["jpeg", "png", "gif", "tiff"]
 default-features = false
 
 [dependencies.palette]
-version = "0.5"
+version = "0.6"
 default-features = false
 features = ["std"]
