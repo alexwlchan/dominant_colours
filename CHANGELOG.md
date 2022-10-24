@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.7 - 2022-10-24
+
+Some internal refactoring to use newer versions of libraries.
+
+This has no feature changes.
+
 ## v1.1.6 - 2022-10-23
 
 Provide precompiled binaries for more targets, so the following targets are now supported:

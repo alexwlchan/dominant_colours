@@ -1,11 +1,11 @@
 [package]
 name = "dominant_colours"
-version = "1.1.6"
+version = "1.1.7"
 edition = "2018"
 
 [dependencies]
-assert_cmd = "2.0.2"
-clap = "2.33"
+assert_cmd = "2.0.5"
+clap = "4.0.18"
 
 [dependencies.kmeans_colors]
 version = "0.4.0"
