@@ -1,5 +1,7 @@
 use clap::{Arg, ArgAction, Command};
 
+use crate::models::{Action, ActionOptions};
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn app() -> clap::Command {
@@ -26,6 +28,24 @@ pub fn app() -> clap::Command {
                 .help("Just print the hex values, not colour previews")
                 .action(ArgAction::SetTrue),
         )
+}
+
+pub fn parse_arguments(matches: clap::ArgMatches) -> Action {
+    let path = matches
+        .get_one::<String>("PATH")
+        .expect("`path` is required");
+
+    let max_colours: usize = *matches
+        .get_one::<usize>("MAX-COLOURS")
+        .expect("`max-colours` is required");
+
+    let command = Action {
+        path: path.to_owned(),
+        no_palette: matches.get_flag("no-palette"),
+        options: ActionOptions::GetDominantColours { max_colours },
+    };
+
+    command
 }
 
 #[cfg(test)]

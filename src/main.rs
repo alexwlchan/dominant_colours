@@ -8,43 +8,18 @@ use palette::{FromColor, IntoColor, Lab, Pixel, Srgb, Srgba};
 
 mod cli;
 mod get_bytes;
-
-#[derive(Debug)]
-pub struct Command {
-    pub path: String,
-    pub no_palette: bool,
-    pub options: CommandOptions,
-}
-
-#[derive(Debug)]
-pub enum CommandOptions {
-    GetDominantColours { max_colours: usize },
-    GetBestColourWith { compared_to: palette::Srgb },
-}
+mod models;
 
 fn main() {
     let matches = cli::app().get_matches();
-
-    let path = matches
-        .get_one::<String>("PATH")
-        .expect("`path` is required");
-
-    let max_colours: usize = *matches
-        .get_one::<usize>("MAX-COLOURS")
-        .expect("`max-colours` is required");
-
-    let command = Command {
-        path: path.to_owned(),
-        no_palette: matches.get_flag("no-palette"),
-        options: CommandOptions::GetDominantColours { max_colours },
-    };
+    let action = cli::parse_arguments(matches);
 
     // There's different code for fetching bytes from GIF images because
     // GIFs are often animated, and we want a selection of frames.
-    let img_bytes = if path.to_lowercase().ends_with(".gif") {
-        get_bytes::get_bytes_for_gif(&path)
+    let img_bytes = if action.path.to_lowercase().ends_with(".gif") {
+        get_bytes::get_bytes_for_gif(&action.path)
     } else {
-        get_bytes::get_bytes_for_image(&path)
+        get_bytes::get_bytes_for_image(&action.path)
     };
 
     // This is based on code from the kmeans-colors binary, but with a bunch of
@@ -55,13 +30,13 @@ fn main() {
         .map(|x| x.into_format::<_, f32>().into_color())
         .collect();
 
-    let rgb: Vec<Srgb<u8>> = match command.options {
-        CommandOptions::GetDominantColours { max_colours } => get_dominant_colours(lab, max_colours),
-        CommandOptions::GetBestColourWith { compared_to } => vec![],
+    let rgb: Vec<Srgb<u8>> = match action.options {
+        models::ActionOptions::GetDominantColours { max_colours } => get_dominant_colours(lab, max_colours),
+        models::ActionOptions::GetBestColourWith { compared_to } => vec![],
     };
 
     for c in rgb {
-        print_hex_string(c, command.no_palette);
+        print_hex_string(c, action.no_palette);
     }
 }
 
