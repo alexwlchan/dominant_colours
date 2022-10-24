@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.2.0 - 2022-10-24
+
+Add a new flag `--compared-to` which allows you to specify a background colour you're going to use.
+`dominant_colours` will then select the best colour to use, based on two criteria:
+
+*   Whether the colour has enough contrast with the background (looking for a pass with WCAG AA)
+*   Maximising the saturation, to select for bright and fun colours
+
+Example:
+
+```console
+$ cargo run -- lighthouse.jpg --compared-to='#000000'
+▇ #4880cd  # blue
+
+$ cargo run -- lighthouse.jpg --compared-to='#ffffff'
+▇ #c53b4e  # red
+```
+
 ## v1.1.8 - 2022-10-24
 
 More internal refactoring to use newer versions of kmeans-colors and palette.
