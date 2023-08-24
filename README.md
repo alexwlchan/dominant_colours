@@ -69,6 +69,46 @@ It currently supports JPEGs, PNGs, and GIFs (including animated GIFs).
 
 
 
+## Wrapper functions in other languages
+
+One of the reasons I wrote `dominant_colours` as a standalone binary was to allow me to write all the fiddly colour logic once, and then I can call it with thin wrapper functions from other languages.
+
+So far I've only done this from Python, but the option is there!
+I'll put any of these wrapper functions I write below (or add your own in a PR):
+
+<details>
+  <summary>Python</summary>
+
+```python
+import subprocess
+
+
+def dominant_colours(path, *, max_colours=5):
+    """
+    Get the dominant colours of an image.
+    
+    Returns the colours as RGB tuples of 0-255 values,
+    e.g. red is (255, 0, 0).
+    """
+    cmd = ["dominant_colours", path, f"--max-colours={max_colours}", "--no-palette"]
+    output = subprocess.check_output(cmd)
+
+    colours = []
+
+    for line in output.splitlines():
+        colours.append((
+            int(line[1:3], 16),
+            int(line[3:5], 16),
+            int(line[5:7], 16),
+        ))
+
+    return colours
+```
+
+</details>
+
+
+
 ## Further reading
 
 -   I've written [an accompanying blog post](https://alexwlchan.net/2021/11/dominant-colours/) that talks more about the motivation behind the tool, a high-level overview of how it works, and why I chose to write it in Rust.
