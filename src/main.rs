@@ -175,6 +175,24 @@ mod tests {
         );
     }
 
+    #[test]
+    fn it_lets_you_choose_the_seed() {
+        let output = get_success(&["./src/tests/noise.jpg", "--max-colours=1", "--seed", "123456789"]);
+
+        assert_eq!(output.stdout.contains("#85827f"), true);
+    }
+
+    #[test]
+    fn it_lets_you_set_random_seed() {
+        let output1 = get_success(&["./src/tests/noise.jpg", "--random-seed"]);
+        let output2 = get_success(&["./src/tests/noise.jpg", "--random-seed"]);
+
+        assert_ne!(
+            output1.stdout,
+            output2.stdout
+        );
+    }
+
     // The image created in the next two tests was created with the
     // following command:
     //
@@ -206,6 +224,52 @@ mod tests {
     }
 
     #[test]
+    fn it_still_prints_16_colours_when_max_colours_and_terminal_colours_are_set() {
+        let output = get_success(&["./src/tests/terminal_colours.png", "--terminal-colours", "--max-colours=20"]);
+
+        assert_eq!(output.exit_code, 0);
+
+        assert_eq!(
+            output.stdout.matches("\n").count(),
+            16,
+            "stdout = {:?}",
+            output.stdout
+        );
+    }
+
+    // Notice the colours in the terminal_colours.png image is slightly different than the values defined in terminal_colours.rs.
+    // This is on purpose to test that slight variation gets handled.
+    #[test]
+    fn it_prints_the_ansi_terminal_colours_mapped_correctly() {
+        let output = get_success(&["./src/tests/terminal_colours.png", "--terminal-colours", "--no-palette"]);
+
+        assert_eq!(output.exit_code, 0);
+
+        let expected_output = "\
+#000000
+#aa0000
+#00aa00
+#808000
+#0000aa
+#aa00aa
+#00aaaa
+#aaaaaa
+#555555
+#ff0000
+#00ff00
+#ffff00
+#0000ff
+#ff00ff
+#00ffff
+#ffffff
+";
+
+        assert_eq!(output.stdout, expected_output);
+
+        assert_eq!(output.stderr, "");
+    }
+
+    #[test]
     fn it_fails_if_you_pass_an_invalid_max_colours() {
         let output = get_failure(&["./src/tests/red.png", "--max-colours=NaN"]);
 
@@ -214,6 +278,18 @@ mod tests {
         assert_eq!(
             output.stderr,
             "error: Invalid value 'NaN' for '--max-colours <MAX-COLOURS>': invalid digit found in string\n\nFor more information try '--help'\n"
+        );
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_an_invalid_seed() {
+        let output = get_failure(&["./src/tests/noise.jpg", "--seed=NaN"]);
+
+        assert_eq!(output.exit_code, 2);
+        assert_eq!(output.stdout, "");
+        assert_eq!(
+            output.stderr,
+            "error: Invalid value 'NaN' for '--seed <SEED>': invalid digit found in string\n\nFor more information try '--help'\n"
         );
     }
 
