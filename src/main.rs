@@ -30,11 +30,11 @@ fn main() {
             .expect("`seed` is required")
     };
 
-    let colour_count: usize = if terminal_colours { 16 } else {
-        *matches
-            .get_one::<usize>("MAX-COLOURS")
-            .expect("`max-colours` is required")
-    };
+    let colour_count = *matches
+        .get_one::<usize>("MAX-COLOURS")
+        .expect("`max-colours` is required");
+
+    let colour_count: usize = if terminal_colours && 16 > colour_count { 16 } else { colour_count };
 
     // There's different code for fetching bytes from GIF images because
     // GIFs are often animated, and we want a selection of frames.
@@ -56,15 +56,15 @@ fn main() {
     let converge = 1.0;
     let verbose = false;
 
-    let result : Vec<Lab> = get_kmeans_hamerly(colour_count, max_iterations, converge, verbose, &lab, seed).centroids;
+    let result = get_kmeans_hamerly(colour_count, max_iterations, converge, verbose, &lab, seed).centroids;
 
-    let srgb_colors: Vec<Srgb<u8>> = result
+    let srgb_colors = result
         .iter()
         .map(|x| Srgb::from_color(*x).into_format())
         .collect();
 
-    let rgb : Vec<Srgb<u8>> = if terminal_colours {
-        terminal_colours::map_to_terminal_color(srgb_colors)
+    let rgb = if terminal_colours {
+        terminal_colours::create_terminal_color(srgb_colors)
     } else {
         srgb_colors
     };

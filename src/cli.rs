@@ -29,20 +29,20 @@ pub fn app() -> Command {
         .arg(
             Arg::new("SEED")
                 .long("seed")
-                .help("Blah")
+                .help("Specify seed for picking the colours")
                 .value_parser(value_parser!(u64))
                 .default_value("0"),
         )
         .arg(
             Arg::new("random-seed")
                 .long("random-seed")
-                .help("Blah2")
+                .help("Choose a random seed for picking the colours")
                 .action(ArgAction::SetTrue),
         )
         .arg(
             Arg::new("terminal-colours")
                 .long("terminal-colours")
-                .help("Generate 16 colors for the terminal")
+                .help("Generate 16 colours for the terminal")
                 .action(ArgAction::SetTrue),
         )
 }
