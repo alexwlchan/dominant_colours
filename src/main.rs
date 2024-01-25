@@ -64,7 +64,7 @@ fn main() {
         .collect();
 
     let rgb = if terminal_colours {
-        terminal_colours::create_terminal_color(srgb_colors)
+        terminal_colours::create_terminal_colour(srgb_colors)
     } else {
         srgb_colors
     };
@@ -97,7 +97,7 @@ mod tests {
     // provided by the external library.
 
     #[test]
-    fn it_prints_the_color_with_ansi_escape_codes() {
+    fn it_prints_the_colour_with_ansi_escape_codes() {
         let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
 
         assert_eq!(output.exit_code, 0);
