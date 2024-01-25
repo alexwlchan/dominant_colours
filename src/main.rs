@@ -4,10 +4,12 @@
 extern crate clap;
 
 use kmeans_colors::get_kmeans_hamerly;
-use palette::{FromColor, IntoColor, Lab, Pixel, Srgb, Srgba};
+use rand::random;
+use palette::{FromColor, IntoColor, Pixel, Lab, Srgb, Srgba};
 
 mod cli;
 mod get_bytes;
+mod terminal_colours;
 
 fn main() {
     let matches = cli::app().get_matches();
@@ -16,9 +18,23 @@ fn main() {
         .get_one::<String>("PATH")
         .expect("`path` is required");
 
-    let max_colours: usize = *matches
-        .get_one::<usize>("MAX-COLOURS")
-        .expect("`max-colours` is required");
+    let terminal_colours = matches
+        .get_flag("terminal-colours");
+
+    let random_seed = matches
+        .get_flag("random-seed");
+
+    let seed: u64 = if random_seed { random() } else {
+        *matches
+            .get_one::<u64>("SEED")
+            .expect("`seed` is required")
+    };
+
+    let colour_count: usize = if terminal_colours { 16 } else {
+        *matches
+            .get_one::<usize>("MAX-COLOURS")
+            .expect("`max-colours` is required")
+    };
 
     // There's different code for fetching bytes from GIF images because
     // GIFs are often animated, and we want a selection of frames.
@@ -39,15 +55,19 @@ fn main() {
     let max_iterations = 20;
     let converge = 1.0;
     let verbose = false;
-    let seed: u64 = 0;
 
-    let result = get_kmeans_hamerly(max_colours, max_iterations, converge, verbose, &lab, seed);
+    let result : Vec<Lab> = get_kmeans_hamerly(colour_count, max_iterations, converge, verbose, &lab, seed).centroids;
 
-    let rgb = &result
-        .centroids
+    let srgb_colors: Vec<Srgb<u8>> = result
         .iter()
         .map(|x| Srgb::from_color(*x).into_format())
-        .collect::<Vec<Srgb<u8>>>();
+        .collect();
+
+    let rgb : Vec<Srgb<u8>> = if terminal_colours {
+        terminal_colours::map_to_terminal_color(srgb_colors)
+    } else {
+        srgb_colors
+    };
 
     // This uses ANSI escape sequences and Unicode block elements to print
     // a palette of hex strings which are coloured to match.

@@ -2,7 +2,7 @@ use clap::{Arg, ArgAction, Command};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub fn app() -> clap::Command {
+pub fn app() -> Command {
     Command::new("dominant_colours")
         .version(VERSION)
         .author("Alex Chan <alex@alexwlchan.net>")
@@ -24,6 +24,25 @@ pub fn app() -> clap::Command {
             Arg::new("no-palette")
                 .long("no-palette")
                 .help("Just print the hex values, not colour previews")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("SEED")
+                .long("seed")
+                .help("Blah")
+                .value_parser(value_parser!(u64))
+                .default_value("0"),
+        )
+        .arg(
+            Arg::new("random-seed")
+                .long("random-seed")
+                .help("Blah2")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("terminal-colours")
+                .long("terminal-colours")
+                .help("Generate 16 colors for the terminal")
                 .action(ArgAction::SetTrue),
         )
 }
