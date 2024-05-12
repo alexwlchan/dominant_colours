@@ -21,6 +21,11 @@ pub fn app() -> clap::Command {
                 .default_value("5"),
         )
         .arg(
+            Arg::new("BACKGROUND_HEX")
+                .long("best-against-bg")
+                .help("find a single colour that will look best against this background")
+        )
+        .arg(
             Arg::new("no-palette")
                 .long("no-palette")
                 .help("Just print the hex values, not colour previews")
