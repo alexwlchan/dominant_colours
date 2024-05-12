@@ -1,5 +1,5 @@
 use kmeans_colors::get_kmeans_hamerly;
-use palette::{color_difference::Wcag21RelativeContrast, FromColor, Hsl, Lab, Srgb};
+use palette::{color_difference::Wcag21RelativeContrast, FromColor, Lab, Srgb};
 
 pub fn find_dominant_colors(lab: &Vec<Lab>, max_colors: usize) -> Vec<Lab> {
     // This is based on code from the kmeans-colors binary, but with a bunch of
@@ -40,18 +40,42 @@ pub fn choose_best_color_for_bg(colors: Vec<Lab>, background: &Srgb<u8>) -> Vec<
     // Filter for colors which meet the min contrast ratio
     let allowed_colors: Vec<Srgb<f32>> = extended_colors
         .into_iter()
-        .filter(|c| background.has_min_contrast_text(*c))
+        .filter(|c| background.has_min_contrast_graphics(*c))
         .collect();
 
     // Now pick the color with the highest saturation among the remaining.
     let best_color: Srgb<f32> = allowed_colors
         .into_iter()
         .max_by(|color_a, color_b| {
-            let saturation_a = Hsl::new_srgb(color_a.red, color_a.green, color_a.blue).saturation;
-            let saturation_b = Hsl::new_srgb(color_b.red, color_b.green, color_b.blue).saturation;
-            saturation_a.partial_cmp(&saturation_b).unwrap()
+            saturation(color_a)
+                .partial_cmp(&saturation(color_b))
+                .unwrap()
         })
         .unwrap();
 
     vec![Lab::from_color(best_color)]
+}
+
+// Based on https://filmentor.academy/en/blogs/news/die-wunderbare-welt-der-mathematik-fur-farben
+fn saturation(c: &Srgb<f32>) -> f32 {
+    let min_rgb: f32 = vec![c.red, c.green, c.blue]
+        .into_iter()
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
+    let max_rgb: f32 = vec![c.red, c.green, c.blue]
+        .into_iter()
+        .max_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
+
+    if min_rgb == max_rgb {
+        return 0.0;
+    }
+
+    let luminosity: f32 = 0.5 * (min_rgb + max_rgb);
+
+    if luminosity == 1.0 {
+        0.0
+    } else {
+        (max_rgb - min_rgb) / (1.0 - (2.0 * luminosity - 1.0).abs())
+    }
 }
