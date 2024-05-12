@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate clap;
 
-use palette::Lab;
+use palette::{Lab, Srgb};
 
 mod cli;
 mod find_dominant_colors;
@@ -17,27 +17,44 @@ fn main() {
         .expect("`path` is required");
 
     let max_colours: usize = *matches
-        .get_one::<usize>("MAX-COLOURS")
+        .get_one::<usize>("MAX_COLOURS")
         .expect("`max-colours` is required");
 
     let lab: Vec<Lab> = get_image_colors::get_image_colors(&path);
 
     let dominant_colors = find_dominant_colors::find_dominant_colors(&lab, max_colours);
 
+    let background = matches.get_one::<Srgb<u8>>("BACKGROUND_HEX");
+
     // This uses ANSI escape sequences and Unicode block elements to print
     // a palette of hex strings which are coloured to match.
     // See https://alexwlchan.net/2021/04/coloured-squares/
     for c in dominant_colors {
-        let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+        print_color(c, &background, matches.get_flag("no-palette"));
+    }
+}
 
-        if matches.get_flag("no-palette") {
-            println!("{}", display_value);
-        } else {
-            println!(
-                "\x1B[38;2;{};{};{}m▇ {}\x1B[0m",
-                c.red, c.green, c.blue, display_value
-            );
-        }
+// Print the colours to the terminal, using ANSI escape codes to
+// apply formatting if desired.
+//
+// Useful reading: https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797?permalink_comment_id=3857871
+fn print_color(c: Srgb<u8>, background: &Option<&Srgb<u8>>, no_palette: bool) {
+    let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+
+    if no_palette {
+        println!("{}", display_value);
+    } else {
+        // If a background colour is specified, print it behind the
+        // hex strings.
+        match background {
+            Some(bg) => print!("\x1B[48;2;{};{};{}m", bg.red, bg.green, bg.blue),
+            _ => (),
+        };
+
+        println!(
+            "\x1B[38;2;{};{};{}m▇ {}\x1B[0m",
+            c.red, c.green, c.blue, display_value
+        );
     }
 }
 
