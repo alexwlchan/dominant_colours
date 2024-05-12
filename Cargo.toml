@@ -8,7 +8,7 @@ assert_cmd = "2.0.14"
 clap = "4.0.18"
 
 [dependencies.kmeans_colors]
-version = "0.5.0"
+version = "0.6.0"
 features = ["palette_color"]
 default-features = false
 
@@ -18,6 +18,6 @@ features = ["jpeg", "png", "gif", "tiff"]
 default-features = false
 
 [dependencies.palette]
-version = "0.6"
+version = "0.7"
 default-features = false
 features = ["std"]

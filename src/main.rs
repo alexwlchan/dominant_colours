@@ -4,7 +4,8 @@
 extern crate clap;
 
 use kmeans_colors::get_kmeans_hamerly;
-use palette::{FromColor, IntoColor, Lab, Pixel, Srgb, Srgba};
+use palette::cast::from_component_slice;
+use palette::{FromColor, IntoColor, Lab, Srgb, Srgba};
 
 mod cli;
 mod get_bytes;
@@ -31,7 +32,7 @@ fn main() {
     // This is based on code from the kmeans-colors binary, but with a bunch of
     // the options stripped out.
     // See https://github.com/okaneco/kmeans-colors/blob/0.5.0/src/bin/kmeans_colors/app.rs
-    let lab: Vec<Lab> = Srgba::from_raw_slice(&img_bytes)
+    let lab: Vec<Lab> = from_component_slice::<Srgba<u8>>(&img_bytes)
         .iter()
         .map(|x| x.into_format::<_, f32>().into_color())
         .collect();
