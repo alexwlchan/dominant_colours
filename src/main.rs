@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate clap;
 
-use palette::{Lab, Srgb};
+use palette::{FromColor, Lab, Srgb};
 
 mod cli;
 mod find_dominant_colors;
@@ -27,11 +27,16 @@ fn main() {
     let background = matches.get_one::<Srgb<u8>>("BACKGROUND_HEX");
 
     let selected_colors = match background {
-        Some(_bg) => dominant_colors,
-        None      => dominant_colors,
+        Some(bg) => find_dominant_colors::choose_best_color_for_bg(dominant_colors.clone(), bg),
+        None => dominant_colors,
     };
 
-    for c in selected_colors {
+    let rgb_colors = selected_colors
+        .iter()
+        .map(|c| Srgb::from_color(*c).into_format())
+        .collect::<Vec<Srgb<u8>>>();
+
+    for c in rgb_colors {
         print_color(c, &background, matches.get_flag("no-palette"));
     }
 }
@@ -188,7 +193,7 @@ mod tests {
         assert_eq!(output.stdout, "");
         assert_eq!(
             output.stderr,
-            "error: invalid value 'NaN' for '--max-colours <MAX-COLOURS>': invalid digit found in string\n\nFor more information, try '--help'.\n"
+            "error: invalid value 'NaN' for '--max-colours <MAX_COLOURS>': invalid digit found in string\n\nFor more information, try '--help'.\n"
         );
     }
 
