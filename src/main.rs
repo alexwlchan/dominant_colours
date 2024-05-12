@@ -222,10 +222,7 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(
-            output.stderr,
-            "The file extension `.\"md\"` was not recognized as an image format\n"
-        );
+        assert_eq!(output.stderr, "The image format could not be determined\n");
     }
 
     #[test]
