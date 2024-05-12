@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::io::BufReader;
 
 use image::codecs::gif::GifDecoder;
 use image::imageops::FilterType;
@@ -41,6 +42,8 @@ pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
             std::process::exit(1);
         }
     };
+
+    let f = BufReader::new(f);
 
     let decoder = GifDecoder::new(f).ok().unwrap();
 
