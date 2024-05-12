@@ -227,7 +227,7 @@ mod tests {
             "src/tests/stripes.png",
             "--max-colours=5",
             "--best-against-bg=#222",
-            "--no-palette"
+            "--no-palette",
         ]);
 
         assert_eq!(output.stdout, "#d4fb79\n");
@@ -239,7 +239,7 @@ mod tests {
             "src/tests/stripes.png",
             "--max-colours=5",
             "--best-against-bg=#fff",
-            "--no-palette"
+            "--no-palette",
         ]);
 
         assert_eq!(output.stdout, "#a35c00\n");
