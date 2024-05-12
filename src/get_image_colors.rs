@@ -143,4 +143,9 @@ mod test {
     fn it_gets_colors_for_mri_fruit() {
         get_image_colors("./src/tests/garlic.gif");
     }
+
+    #[test]
+    fn get_colors_for_webp() {
+        get_image_colors("./src/tests/purple.webp");
+    }
 }
