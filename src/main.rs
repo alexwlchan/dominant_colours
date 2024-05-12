@@ -242,7 +242,7 @@ mod tests {
             "--no-palette",
         ]);
 
-        assert_eq!(output.stdout, "#a35c00\n");
+        assert_eq!(output.stdout, "#693900\n");
     }
 
     struct DcOutput {
