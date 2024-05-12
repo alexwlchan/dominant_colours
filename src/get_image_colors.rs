@@ -1,11 +1,36 @@
+// This file exports a single function, which is used to read the
+// pixel data from an image.
+//
+// This includes resizing the image to a smaller size (~400×400) for
+// faster downstream computations.
+//
+// It returns a Vec<Lab>, which can be passed to the k-means process.
+
 use std::fs::File;
 use std::io::BufReader;
 
 use image::codecs::gif::GifDecoder;
 use image::imageops::FilterType;
 use image::{AnimationDecoder, DynamicImage, Frame};
+use palette::cast::from_component_slice;
+use palette::{IntoColor, Lab, Srgba};
 
-pub fn get_bytes_for_image(path: &str) -> Vec<u8> {
+pub fn get_image_colors(path: &str) -> Vec<Lab> {
+    let image_bytes = if path.to_lowercase().ends_with(".gif") {
+        get_bytes_for_gif(&path)
+    } else {
+        get_bytes_for_non_gif(&path)
+    };
+
+    let lab: Vec<Lab> = from_component_slice::<Srgba<u8>>(&image_bytes)
+        .iter()
+        .map(|x| x.into_format::<_, f32>().into_color())
+        .collect();
+
+    lab
+}
+
+fn get_bytes_for_non_gif(path: &str) -> Vec<u8> {
     let img = match image::open(&path) {
         Ok(im) => im,
         Err(e) => {
@@ -34,7 +59,7 @@ pub fn get_bytes_for_image(path: &str) -> Vec<u8> {
     resized_img.into_rgba8().into_raw()
 }
 
-pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
+fn get_bytes_for_gif(path: &str) -> Vec<u8> {
     let f = match File::open(path) {
         Ok(im) => im,
         Err(e) => {
@@ -107,7 +132,7 @@ pub fn get_bytes_for_gif(path: &str) -> Vec<u8> {
 
 #[cfg(test)]
 mod test {
-    use crate::get_bytes;
+    use crate::get_image_colors::get_image_colors;
 
     // This image comes from https://stacks.wellcomecollection.org/peering-through-mri-scans-of-fruit-and-veg-part-1-a2e8b07bde6f
     //
@@ -115,7 +140,7 @@ mod test {
     // caused v1.1.2 to fall over.  This is a test that they can still be
     // processed correctly.
     #[test]
-    fn it_gets_bytes_for_mri_fruit() {
-        get_bytes::get_bytes_for_gif("./src/tests/garlic.gif");
+    fn it_gets_colors_for_mri_fruit() {
+        get_image_colors("./src/tests/garlic.gif");
     }
 }
