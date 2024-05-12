@@ -4,11 +4,10 @@
 extern crate clap;
 
 use kmeans_colors::get_kmeans_hamerly;
-use palette::cast::from_component_slice;
-use palette::{FromColor, IntoColor, Lab, Srgb, Srgba};
+use palette::{FromColor, Lab, Srgb};
 
 mod cli;
-mod get_bytes;
+mod get_image_colors;
 
 fn main() {
     let matches = cli::app().get_matches();
@@ -21,22 +20,11 @@ fn main() {
         .get_one::<usize>("MAX-COLOURS")
         .expect("`max-colours` is required");
 
-    // There's different code for fetching bytes from GIF images because
-    // GIFs are often animated, and we want a selection of frames.
-    let img_bytes = if path.to_lowercase().ends_with(".gif") {
-        get_bytes::get_bytes_for_gif(&path)
-    } else {
-        get_bytes::get_bytes_for_image(&path)
-    };
+    let lab: Vec<Lab> = get_image_colors::get_image_colors(&path);
 
     // This is based on code from the kmeans-colors binary, but with a bunch of
     // the options stripped out.
     // See https://github.com/okaneco/kmeans-colors/blob/0.5.0/src/bin/kmeans_colors/app.rs
-    let lab: Vec<Lab> = from_component_slice::<Srgba<u8>>(&img_bytes)
-        .iter()
-        .map(|x| x.into_format::<_, f32>().into_color())
-        .collect();
-
     let max_iterations = 20;
     let converge = 1.0;
     let verbose = false;
