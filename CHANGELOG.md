@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.9 - 2024-05-12
+
+Bump the version of all the dependency libraries, and try to get the release process working again.
+
+This has no feature changes.
+
 ## v1.1.8 - 2022-10-24
 
 More internal refactoring to use newer versions of kmeans-colors and palette.
