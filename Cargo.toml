@@ -4,7 +4,7 @@ version = "1.1.8"
 edition = "2018"
 
 [dependencies]
-assert_cmd = "2.0.5"
+assert_cmd = "2.0.14"
 clap = "4.0.18"
 
 [dependencies.kmeans_colors]
