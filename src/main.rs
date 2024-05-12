@@ -3,11 +3,12 @@
 #[macro_use]
 extern crate clap;
 
-use palette::Lab;
+use palette::{FromColor, Lab, Srgb};
 
 mod cli;
 mod find_dominant_colors;
 mod get_image_colors;
+mod printing;
 
 fn main() {
     let matches = cli::app().get_matches();
@@ -17,27 +18,27 @@ fn main() {
         .expect("`path` is required");
 
     let max_colours: usize = *matches
-        .get_one::<usize>("MAX-COLOURS")
+        .get_one::<usize>("MAX_COLOURS")
         .expect("`max-colours` is required");
 
     let lab: Vec<Lab> = get_image_colors::get_image_colors(&path);
 
     let dominant_colors = find_dominant_colors::find_dominant_colors(&lab, max_colours);
 
-    // This uses ANSI escape sequences and Unicode block elements to print
-    // a palette of hex strings which are coloured to match.
-    // See https://alexwlchan.net/2021/04/coloured-squares/
-    for c in dominant_colors {
-        let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+    let background = matches.get_one::<Srgb<u8>>("BACKGROUND_HEX");
 
-        if matches.get_flag("no-palette") {
-            println!("{}", display_value);
-        } else {
-            println!(
-                "\x1B[38;2;{};{};{}m▇ {}\x1B[0m",
-                c.red, c.green, c.blue, display_value
-            );
-        }
+    let selected_colors = match background {
+        Some(bg) => find_dominant_colors::choose_best_color_for_bg(dominant_colors.clone(), bg),
+        None => dominant_colors,
+    };
+
+    let rgb_colors = selected_colors
+        .iter()
+        .map(|c| Srgb::from_color(*c).into_format())
+        .collect::<Vec<Srgb<u8>>>();
+
+    for c in rgb_colors {
+        printing::print_color(c, &background, matches.get_flag("no-palette"));
     }
 }
 
@@ -168,7 +169,7 @@ mod tests {
         assert_eq!(output.stdout, "");
         assert_eq!(
             output.stderr,
-            "error: invalid value 'NaN' for '--max-colours <MAX-COLOURS>': invalid digit found in string\n\nFor more information, try '--help'.\n"
+            "error: invalid value 'NaN' for '--max-colours <MAX_COLOURS>': invalid digit found in string\n\nFor more information, try '--help'.\n"
         );
     }
 
@@ -218,6 +219,30 @@ mod tests {
             output.stderr,
             "Format error decoding Png: Invalid PNG signature.\n"
         );
+    }
+
+    #[test]
+    fn it_chooses_the_right_color_for_a_dark_background() {
+        let output = get_success(&[
+            "src/tests/stripes.png",
+            "--max-colours=5",
+            "--best-against-bg=#222",
+            "--no-palette",
+        ]);
+
+        assert_eq!(output.stdout, "#d4fb79\n");
+    }
+
+    #[test]
+    fn it_chooses_the_right_color_for_a_light_background() {
+        let output = get_success(&[
+            "src/tests/stripes.png",
+            "--max-colours=5",
+            "--best-against-bg=#fff",
+            "--no-palette",
+        ]);
+
+        assert_eq!(output.stdout, "#693900\n");
     }
 
     struct DcOutput {

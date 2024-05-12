@@ -1,4 +1,5 @@
 use clap::{Arg, ArgAction, Command};
+use palette::Srgb;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -14,11 +15,17 @@ pub fn app() -> clap::Command {
                 .index(1),
         )
         .arg(
-            Arg::new("MAX-COLOURS")
+            Arg::new("MAX_COLOURS")
                 .long("max-colours")
                 .help("how many colours to find")
                 .value_parser(value_parser!(usize))
                 .default_value("5"),
+        )
+        .arg(
+            Arg::new("BACKGROUND_HEX")
+                .long("best-against-bg")
+                .help("find a single colour that will look best against this background")
+                .value_parser(value_parser!(Srgb<u8>)),
         )
         .arg(
             Arg::new("no-palette")
