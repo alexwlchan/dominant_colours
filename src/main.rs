@@ -3,10 +3,10 @@
 #[macro_use]
 extern crate clap;
 
-use kmeans_colors::get_kmeans_hamerly;
-use palette::{FromColor, Lab, Srgb};
+use palette::Lab;
 
 mod cli;
+mod find_dominant_colors;
 mod get_image_colors;
 
 fn main() {
@@ -22,26 +22,12 @@ fn main() {
 
     let lab: Vec<Lab> = get_image_colors::get_image_colors(&path);
 
-    // This is based on code from the kmeans-colors binary, but with a bunch of
-    // the options stripped out.
-    // See https://github.com/okaneco/kmeans-colors/blob/0.5.0/src/bin/kmeans_colors/app.rs
-    let max_iterations = 20;
-    let converge = 1.0;
-    let verbose = false;
-    let seed: u64 = 0;
-
-    let result = get_kmeans_hamerly(max_colours, max_iterations, converge, verbose, &lab, seed);
-
-    let rgb = &result
-        .centroids
-        .iter()
-        .map(|x| Srgb::from_color(*x).into_format())
-        .collect::<Vec<Srgb<u8>>>();
+    let dominant_colors = find_dominant_colors::find_dominant_colors(&lab, max_colours);
 
     // This uses ANSI escape sequences and Unicode block elements to print
     // a palette of hex strings which are coloured to match.
     // See https://alexwlchan.net/2021/04/coloured-squares/
-    for c in rgb {
+    for c in dominant_colors {
         let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
 
         if matches.get_flag("no-palette") {
