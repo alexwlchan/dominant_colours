@@ -26,10 +26,12 @@ fn main() {
 
     let background = matches.get_one::<Srgb<u8>>("BACKGROUND_HEX");
 
-    // This uses ANSI escape sequences and Unicode block elements to print
-    // a palette of hex strings which are coloured to match.
-    // See https://alexwlchan.net/2021/04/coloured-squares/
-    for c in dominant_colors {
+    let selected_colors = match background {
+        Some(_bg) => dominant_colors,
+        None      => dominant_colors,
+    };
+
+    for c in selected_colors {
         print_color(c, &background, matches.get_flag("no-palette"));
     }
 }
@@ -37,7 +39,8 @@ fn main() {
 // Print the colours to the terminal, using ANSI escape codes to
 // apply formatting if desired.
 //
-// Useful reading: https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797?permalink_comment_id=3857871
+// See https://alexwlchan.net/2021/04/coloured-squares/
+// See: https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797?permalink_comment_id=3857871
 fn print_color(c: Srgb<u8>, background: &Option<&Srgb<u8>>, no_palette: bool) {
     let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
 
