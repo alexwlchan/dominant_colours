@@ -201,11 +201,11 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_an_unsupported_image_format() {
-        let output = get_failure(&["./src/tests/purple.webp"]);
+        let output = get_failure(&["./src/tests/orange.heic"]);
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "The image format WebP is not supported\n");
+        assert_eq!(output.stderr, "The image format could not be determined\n");
     }
 
     #[test]
