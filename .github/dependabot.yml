@@ -4,7 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+      time: "09:00"
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "daily"
+      time: "09:00"
