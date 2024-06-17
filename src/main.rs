@@ -48,6 +48,7 @@ mod tests {
 
     use assert_cmd::assert::OutputAssertExt;
     use assert_cmd::Command;
+    use regex::Regex;
 
     // Note: for the purposes of these tests, I mostly trust the k-means code
     // provided by the external library.
@@ -243,6 +244,18 @@ mod tests {
         ]);
 
         assert_eq!(output.stdout, "#693900\n");
+    }
+
+    #[test]
+    fn it_prints_the_version() {
+        let output = get_success(&["--version"]);
+
+        let re = Regex::new(r"^dominant_colours [0-9]+\.[0-9]+\.[0-9]+\n$").unwrap();
+
+        assert!(re.is_match(&output.stdout));
+
+        assert_eq!(output.exit_code, 0);
+        assert_eq!(output.stderr, "");
     }
 
     struct DcOutput {
