@@ -1,44 +1,52 @@
 #![deny(warnings)]
 
-#[macro_use]
-extern crate clap;
+use std::path::PathBuf;
 
+use clap::Parser;
 use palette::{FromColor, Lab, Srgb};
 
-mod cli;
 mod find_dominant_colors;
 mod get_image_colors;
 mod printing;
 
+#[derive(Parser, Debug)]
+#[command(version, about = "Find the dominant colours in an image", long_about=None)]
+struct Cli {
+    /// Path to the image to inspect
+    path: PathBuf,
+
+    /// How many colours to find
+    #[arg(long = "max-colours", default_value_t = 5)]
+    max_colours: usize,
+
+    /// Find a single colour that will look best against this background
+    #[arg(long = "best-against-bg")]
+    background: Option<Srgb<u8>>,
+
+    /// Just print the hex values, not colour previews
+    #[arg(long = "no-palette")]
+    no_palette: bool,
+}
+
 fn main() {
-    let matches = cli::app().get_matches();
+    let cli = Cli::parse();
 
-    let path = matches
-        .get_one::<String>("PATH")
-        .expect("`path` is required");
+    let lab: Vec<Lab> = get_image_colors::get_image_colors(&cli.path);
 
-    let max_colours: usize = *matches
-        .get_one::<usize>("MAX_COLOURS")
-        .expect("`max-colours` is required");
+    let dominant_colors = find_dominant_colors::find_dominant_colors(&lab, cli.max_colours);
 
-    let lab: Vec<Lab> = get_image_colors::get_image_colors(&path);
-
-    let dominant_colors = find_dominant_colors::find_dominant_colors(&lab, max_colours);
-
-    let background = matches.get_one::<Srgb<u8>>("BACKGROUND_HEX");
-
-    let selected_colors = match background {
-        Some(bg) => find_dominant_colors::choose_best_color_for_bg(dominant_colors.clone(), bg),
+    let selected_colors = match cli.background {
+        Some(bg) => find_dominant_colors::choose_best_color_for_bg(dominant_colors.clone(), &bg),
         None => dominant_colors,
     };
-
+    //
     let rgb_colors = selected_colors
         .iter()
         .map(|c| Srgb::from_color(*c).into_format())
         .collect::<Vec<Srgb<u8>>>();
 
     for c in rgb_colors {
-        printing::print_color(c, &background, matches.get_flag("no-palette"));
+        printing::print_color(c, &cli.background, cli.no_palette);
     }
 }
 

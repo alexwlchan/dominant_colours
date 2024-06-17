@@ -6,8 +6,10 @@
 //
 // It returns a Vec<Lab>, which can be passed to the k-means process.
 
+use std::ffi::OsStr;
 use std::fs::File;
 use std::io::BufReader;
+use std::path::PathBuf;
 
 use image::codecs::gif::GifDecoder;
 use image::imageops::FilterType;
@@ -15,11 +17,11 @@ use image::{AnimationDecoder, DynamicImage, Frame};
 use palette::cast::from_component_slice;
 use palette::{IntoColor, Lab, Srgba};
 
-pub fn get_image_colors(path: &str) -> Vec<Lab> {
-    let image_bytes = if path.to_lowercase().ends_with(".gif") {
-        get_bytes_for_gif(&path)
-    } else {
-        get_bytes_for_non_gif(&path)
+pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
+    let image_bytes = match path.extension().and_then(OsStr::to_str) {
+        Some("gif") => get_bytes_for_gif(&path),
+        Some("GIF") => get_bytes_for_gif(&path),
+        _ => get_bytes_for_non_gif(&path),
     };
 
     let lab: Vec<Lab> = from_component_slice::<Srgba<u8>>(&image_bytes)
@@ -30,7 +32,7 @@ pub fn get_image_colors(path: &str) -> Vec<Lab> {
     lab
 }
 
-fn get_bytes_for_non_gif(path: &str) -> Vec<u8> {
+fn get_bytes_for_non_gif(path: &PathBuf) -> Vec<u8> {
     let img = match image::open(&path) {
         Ok(im) => im,
         Err(e) => {
@@ -59,7 +61,7 @@ fn get_bytes_for_non_gif(path: &str) -> Vec<u8> {
     resized_img.into_rgba8().into_raw()
 }
 
-fn get_bytes_for_gif(path: &str) -> Vec<u8> {
+fn get_bytes_for_gif(path: &PathBuf) -> Vec<u8> {
     let f = match File::open(path) {
         Ok(im) => im,
         Err(e) => {
@@ -132,6 +134,8 @@ fn get_bytes_for_gif(path: &str) -> Vec<u8> {
 
 #[cfg(test)]
 mod test {
+    use std::path::PathBuf;
+
     use crate::get_image_colors::get_image_colors;
 
     // This image comes from https://stacks.wellcomecollection.org/peering-through-mri-scans-of-fruit-and-veg-part-1-a2e8b07bde6f
@@ -141,11 +145,11 @@ mod test {
     // processed correctly.
     #[test]
     fn it_gets_colors_for_mri_fruit() {
-        get_image_colors("./src/tests/garlic.gif");
+        get_image_colors(&PathBuf::from("./src/tests/garlic.gif"));
     }
 
     #[test]
     fn get_colors_for_webp() {
-        get_image_colors("./src/tests/purple.webp");
+        get_image_colors(&PathBuf::from("./src/tests/purple.webp"));
     }
 }
