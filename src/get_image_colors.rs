@@ -19,8 +19,7 @@ use palette::{IntoColor, Lab, Srgba};
 
 pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
     let image_bytes = match path.extension().and_then(OsStr::to_str) {
-        Some("gif") => get_bytes_for_gif(&path),
-        Some("GIF") => get_bytes_for_gif(&path),
+        Some(ext) if ext.to_lowercase() == "gif" => get_bytes_for_gif(&path),
         _ => get_bytes_for_non_gif(&path),
     };
 
