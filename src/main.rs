@@ -39,7 +39,7 @@ fn main() {
         Some(bg) => find_dominant_colors::choose_best_color_for_bg(dominant_colors.clone(), &bg),
         None => dominant_colors,
     };
-    //
+
     let rgb_colors = selected_colors
         .iter()
         .map(|c| Srgb::from_color(*c).into_format())
