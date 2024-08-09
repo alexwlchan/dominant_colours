@@ -4,7 +4,7 @@ version = "1.2.0"
 edition = "2018"
 
 [dependencies]
-assert_cmd = "2.0.15"
+assert_cmd = "2.0.16"
 clap = { version = "4.5.14", features = ["derive"] }
 regex = "1.10.6"
 
