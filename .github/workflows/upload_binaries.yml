@@ -36,6 +36,8 @@ jobs:
             os: windows-latest
 
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/upload-rust-binary-action@v1
