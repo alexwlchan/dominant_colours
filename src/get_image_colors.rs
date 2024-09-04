@@ -7,7 +7,7 @@
 // It returns a Vec<Lab>, which can be passed to the k-means process.
 
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Error, ErrorKind, Result};
 use std::path::PathBuf;
 
 use image::codecs::gif::GifDecoder;
@@ -17,20 +17,10 @@ use image::{AnimationDecoder, DynamicImage, Frame, ImageFormat};
 use palette::cast::from_component_slice;
 use palette::{IntoColor, Lab, Srgba};
 
-pub fn get_image_colors(path: &PathBuf) -> Result<Vec<Lab>, &str> {
-    let format = match path.extension() {
-        Some(ext) => image::ImageFormat::from_extension(ext),
-        None => return Err("Path has no file extension, so could not determine image format"),
-    };
+pub fn get_image_colors(path: &PathBuf) -> std::io::Result<Vec<Lab>> {
+    let format = get_format(path)?;
 
-    let f = match File::open(path) {
-        Ok(im) => im,
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        }
-    };
-
+    let f = File::open(path)?;
     let reader = BufReader::new(f);
 
     let image_bytes = match format {
@@ -67,6 +57,16 @@ pub fn get_image_colors(path: &PathBuf) -> Result<Vec<Lab>, &str> {
         .collect();
 
     Ok(lab)
+}
+
+fn get_format(path: &PathBuf) -> Result<Option<ImageFormat>> {
+    match path.extension() {
+        Some(ext) => Ok(image::ImageFormat::from_extension(ext)),
+        None => Err(Error::new(
+            ErrorKind::InvalidInput,
+            "Path has no file extension, so could not determine image format",
+        )),
+    }
 }
 
 fn get_bytes_for_static_image(img: DynamicImage) -> Vec<u8> {
