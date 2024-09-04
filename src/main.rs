@@ -265,6 +265,18 @@ mod tests {
     }
 
     #[test]
+    fn it_fails_if_you_pass_a_malformed_webp() {
+        let output = get_failure(&["./src/tests/malformed.txt.webp"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(
+            output.stderr,
+            "Format error decoding WebP: Invalid Chunk header: [82, 73, 70, 70]\n"
+        );
+    }
+
+    #[test]
     fn it_fails_if_you_pass_a_path_without_a_file_extension() {
         let output = get_failure(&["./src/tests/noextension"]);
 
