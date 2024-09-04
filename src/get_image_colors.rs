@@ -25,7 +25,7 @@ pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
 
     let image_bytes = match extension {
         Some(ext) if ext == "gif" => get_bytes_for_gif(&path),
-        _ => get_bytes_for_non_gif(&path),
+        _ => get_bytes_for_static_image(&path),
     };
 
     let lab: Vec<Lab> = from_component_slice::<Srgba<u8>>(&image_bytes)
@@ -36,7 +36,7 @@ pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
     lab
 }
 
-fn get_bytes_for_non_gif(path: &PathBuf) -> Vec<u8> {
+fn get_bytes_for_static_image(path: &PathBuf) -> Vec<u8> {
     let img = match image::open(&path) {
         Ok(im) => im,
         Err(e) => {
