@@ -18,8 +18,13 @@ use palette::cast::from_component_slice;
 use palette::{IntoColor, Lab, Srgba};
 
 pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
-    let image_bytes = match path.extension().and_then(OsStr::to_str) {
-        Some(ext) if ext.to_lowercase() == "gif" => get_bytes_for_gif(&path),
+    let extension = match path.extension().and_then(OsStr::to_str) {
+        Some(ext) => Some(ext.to_lowercase()),
+        None => None,
+    };
+
+    let image_bytes = match extension {
+        Some(ext) if ext == "gif" => get_bytes_for_gif(&path),
         _ => get_bytes_for_non_gif(&path),
     };
 
