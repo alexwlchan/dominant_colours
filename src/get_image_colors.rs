@@ -6,8 +6,9 @@
 //
 // It returns a Vec<Lab>, which can be passed to the k-means process.
 
+use std::fmt::Display;
 use std::fs::File;
-use std::io::{BufReader, Error, ErrorKind, Result};
+use std::io::BufReader;
 use std::path::PathBuf;
 
 use image::codecs::gif::GifDecoder;
@@ -17,37 +18,26 @@ use image::{AnimationDecoder, DynamicImage, Frame, ImageFormat};
 use palette::cast::from_component_slice;
 use palette::{IntoColor, Lab, Srgba};
 
-pub fn get_image_colors(path: &PathBuf) -> std::io::Result<Vec<Lab>> {
+pub fn get_image_colors(path: &PathBuf) -> Result<Vec<Lab>, GetImageColorsErr> {
     let format = get_format(path)?;
 
     let f = File::open(path)?;
     let reader = BufReader::new(f);
 
     let image_bytes = match format {
-        Some(ImageFormat::Gif) => {
-            let decoder = GifDecoder::new(reader).ok().unwrap();
+        ImageFormat::Gif => {
+            let decoder = GifDecoder::new(reader)?;
             get_bytes_for_animated_image(decoder)
         }
 
-        Some(ImageFormat::WebP) => {
-            let decoder = WebPDecoder::new(reader).ok().unwrap();
+        ImageFormat::WebP => {
+            let decoder = WebPDecoder::new(reader)?;
             get_bytes_for_animated_image(decoder)
         }
 
-        Some(format) => {
-            let decoder = match image::load(reader, format) {
-                Ok(im) => im,
-                Err(e) => {
-                    eprintln!("{}", e);
-                    std::process::exit(1)
-                }
-            };
+        format => {
+            let decoder = image::load(reader, format)?;
             get_bytes_for_static_image(decoder)
-        }
-
-        _ => {
-            eprintln!("The image format could not be determined");
-            std::process::exit(1);
         }
     };
 
@@ -59,13 +49,49 @@ pub fn get_image_colors(path: &PathBuf) -> std::io::Result<Vec<Lab>> {
     Ok(lab)
 }
 
-fn get_format(path: &PathBuf) -> Result<Option<ImageFormat>> {
-    match path.extension() {
+pub enum GetImageColorsErr {
+    IoError(std::io::Error),
+    ImageError(image::ImageError),
+    GetFormatError(String),
+}
+
+impl Display for GetImageColorsErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GetImageColorsErr::IoError(io_error) =>
+                write!(f, "{}", io_error),
+            GetImageColorsErr::ImageError(image_error) =>
+                write!(f, "{}", image_error),
+            GetImageColorsErr::GetFormatError(format_error) =>
+                write!(f, "{}", format_error),
+        }
+    }
+}
+
+impl From<std::io::Error> for GetImageColorsErr {
+    fn from(e: std::io::Error) -> GetImageColorsErr {
+        return GetImageColorsErr::IoError(e)
+    }
+}
+
+impl From<image::ImageError> for GetImageColorsErr {
+    fn from(e: image::ImageError) -> GetImageColorsErr {
+        return GetImageColorsErr::ImageError(e)
+    }
+}
+
+fn get_format(path: &PathBuf) -> Result<ImageFormat, GetImageColorsErr> {
+    let format = match path.extension() {
         Some(ext) => Ok(image::ImageFormat::from_extension(ext)),
-        None => Err(Error::new(
-            ErrorKind::InvalidInput,
-            "Path has no file extension, so could not determine image format",
+        None => Err(GetImageColorsErr::GetFormatError(
+            "Path has no file extension, so could not determine image format".to_string()
         )),
+    };
+
+    match format {
+        Ok(Some(format)) => Ok(format),
+        Ok(None) => Err(GetImageColorsErr::GetFormatError("Unable to determine image format from file extension".to_string())),
+        Err(e) => Err(e),
     }
 }
 
@@ -163,11 +189,11 @@ mod test {
     // processed correctly.
     #[test]
     fn it_gets_colors_for_mri_fruit() {
-        get_image_colors(&PathBuf::from("./src/tests/garlic.gif")).unwrap();
+        assert!(get_image_colors(&PathBuf::from("./src/tests/garlic.gif")).is_ok());
     }
 
     #[test]
     fn get_colors_for_webp() {
-        get_image_colors(&PathBuf::from("./src/tests/purple.webp")).unwrap();
+        assert!(get_image_colors(&PathBuf::from("./src/tests/purple.webp")).is_ok());
     }
 }

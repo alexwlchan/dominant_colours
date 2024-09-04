@@ -222,7 +222,7 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "The image format could not be determined\n");
+        assert_eq!(output.stderr, "Unable to determine image format from file extension\n");
     }
 
     #[test]
@@ -231,7 +231,7 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "The image format could not be determined\n");
+        assert_eq!(output.stderr, "Unable to determine image format from file extension\n");
     }
 
     #[test]
@@ -243,6 +243,18 @@ mod tests {
         assert_eq!(
             output.stderr,
             "Format error decoding Png: Invalid PNG signature.\n"
+        );
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_a_malformed_gif() {
+        let output = get_failure(&["./src/tests/malformed.txt.gif"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(
+            output.stderr,
+            "Format error decoding Gif: malformed GIF header\n"
         );
     }
 
