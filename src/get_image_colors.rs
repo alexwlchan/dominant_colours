@@ -58,25 +58,22 @@ pub enum GetImageColorsErr {
 impl Display for GetImageColorsErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GetImageColorsErr::IoError(io_error) =>
-                write!(f, "{}", io_error),
-            GetImageColorsErr::ImageError(image_error) =>
-                write!(f, "{}", image_error),
-            GetImageColorsErr::GetFormatError(format_error) =>
-                write!(f, "{}", format_error),
+            GetImageColorsErr::IoError(io_error) => write!(f, "{}", io_error),
+            GetImageColorsErr::ImageError(image_error) => write!(f, "{}", image_error),
+            GetImageColorsErr::GetFormatError(format_error) => write!(f, "{}", format_error),
         }
     }
 }
 
 impl From<std::io::Error> for GetImageColorsErr {
     fn from(e: std::io::Error) -> GetImageColorsErr {
-        return GetImageColorsErr::IoError(e)
+        return GetImageColorsErr::IoError(e);
     }
 }
 
 impl From<image::ImageError> for GetImageColorsErr {
     fn from(e: image::ImageError) -> GetImageColorsErr {
-        return GetImageColorsErr::ImageError(e)
+        return GetImageColorsErr::ImageError(e);
     }
 }
 
@@ -84,13 +81,15 @@ fn get_format(path: &PathBuf) -> Result<ImageFormat, GetImageColorsErr> {
     let format = match path.extension() {
         Some(ext) => Ok(image::ImageFormat::from_extension(ext)),
         None => Err(GetImageColorsErr::GetFormatError(
-            "Path has no file extension, so could not determine image format".to_string()
+            "Path has no file extension, so could not determine image format".to_string(),
         )),
     };
 
     match format {
         Ok(Some(format)) => Ok(format),
-        Ok(None) => Err(GetImageColorsErr::GetFormatError("Unable to determine image format from file extension".to_string())),
+        Ok(None) => Err(GetImageColorsErr::GetFormatError(
+            "Unable to determine image format from file extension".to_string(),
+        )),
         Err(e) => Err(e),
     }
 }

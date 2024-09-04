@@ -222,7 +222,10 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "Unable to determine image format from file extension\n");
+        assert_eq!(
+            output.stderr,
+            "Unable to determine image format from file extension\n"
+        );
     }
 
     #[test]
@@ -231,7 +234,10 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "Unable to determine image format from file extension\n");
+        assert_eq!(
+            output.stderr,
+            "Unable to determine image format from file extension\n"
+        );
     }
 
     #[test]
