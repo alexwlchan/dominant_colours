@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.0 - 2024-09-04
+
+*   Add support for animated WebP images.
+*   Improve the error messages, especially when dealing with malformed images.
+
 ## v1.2.0 - 2024-05-12
 
 Two new features:
