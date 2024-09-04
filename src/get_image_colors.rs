@@ -17,8 +17,11 @@ use image::{AnimationDecoder, DynamicImage, Frame, ImageFormat};
 use palette::cast::from_component_slice;
 use palette::{IntoColor, Lab, Srgba};
 
-pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
-    let format = image::ImageFormat::from_extension(path.extension().unwrap());
+pub fn get_image_colors(path: &PathBuf) -> Result<Vec<Lab>, &str> {
+    let format = match path.extension() {
+        Some(ext) => image::ImageFormat::from_extension(ext),
+        None => return Err("Path has no file extension, so could not determine image format"),
+    };
 
     let f = match File::open(path) {
         Ok(im) => im,
@@ -63,7 +66,7 @@ pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
         .map(|x| x.into_format::<_, f32>().into_color())
         .collect();
 
-    lab
+    Ok(lab)
 }
 
 fn get_bytes_for_static_image(img: DynamicImage) -> Vec<u8> {
@@ -160,11 +163,11 @@ mod test {
     // processed correctly.
     #[test]
     fn it_gets_colors_for_mri_fruit() {
-        get_image_colors(&PathBuf::from("./src/tests/garlic.gif"));
+        get_image_colors(&PathBuf::from("./src/tests/garlic.gif")).unwrap();
     }
 
     #[test]
     fn get_colors_for_webp() {
-        get_image_colors(&PathBuf::from("./src/tests/purple.webp"));
+        get_image_colors(&PathBuf::from("./src/tests/purple.webp")).unwrap();
     }
 }

@@ -31,7 +31,13 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let lab: Vec<Lab> = get_image_colors::get_image_colors(&cli.path);
+    let lab: Vec<Lab> = match get_image_colors::get_image_colors(&cli.path) {
+        Ok(lab) => lab,
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
+    };
 
     let dominant_colors = find_dominant_colors::find_dominant_colors(&lab, cli.max_colours);
 
@@ -237,6 +243,18 @@ mod tests {
         assert_eq!(
             output.stderr,
             "Format error decoding Png: Invalid PNG signature.\n"
+        );
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_a_path_without_a_file_extension() {
+        let output = get_failure(&["./src/tests/noextension"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(
+            output.stderr,
+            "Path has no file extension, so could not determine image format\n"
         );
     }
 
