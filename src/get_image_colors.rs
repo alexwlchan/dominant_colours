@@ -60,20 +60,10 @@ fn get_bytes_for_non_gif(path: &PathBuf) -> Vec<u8> {
     resized_img.into_rgba8().into_raw()
 }
 
-fn get_bytes_for_gif(path: &PathBuf) -> Vec<u8> {
-    let f = match File::open(path) {
-        Ok(im) => im,
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        }
-    };
+fn get_bytes_for_animated_image<'a>(decoder: impl AnimationDecoder<'a>) -> Vec<u8> {
+    let frames: Vec<Frame> = decoder.into_frames().collect_frames().unwrap();
 
-    let f = BufReader::new(f);
-
-    let decoder = GifDecoder::new(f).ok().unwrap();
-
-    // If the GIF is animated, we want to make sure we look at multiple
+    // If the image is animated, we want to make sure we look at multiple
     // frames when choosing the dominant colour.
     //
     // We don't want to pass all the frames to the k-means analysis, because
@@ -82,8 +72,7 @@ fn get_bytes_for_gif(path: &PathBuf) -> Vec<u8> {
     //
     // For that reason, we select a sample of up to 50 frames and use those
     // as the basis for analysis.
-    let frames: Vec<Frame> = decoder.into_frames().collect_frames().unwrap();
-
+    //
     // How this works: it tells us we should be looking at the nth frame.
     // Examples:
     //
@@ -129,6 +118,22 @@ fn get_bytes_for_gif(path: &PathBuf) -> Vec<u8> {
         .into_iter()
         .flatten()
         .collect()
+}
+
+fn get_bytes_for_gif(path: &PathBuf) -> Vec<u8> {
+    let f = match File::open(path) {
+        Ok(im) => im,
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let f = BufReader::new(f);
+
+    let decoder = GifDecoder::new(f).ok().unwrap();
+
+    get_bytes_for_animated_image(decoder)
 }
 
 #[cfg(test)]
