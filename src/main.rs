@@ -31,7 +31,13 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let lab: Vec<Lab> = get_image_colors::get_image_colors(&cli.path);
+    let lab: Vec<Lab> = match get_image_colors::get_image_colors(&cli.path) {
+        Ok(lab) => lab,
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
+    };
 
     let dominant_colors = find_dominant_colors::find_dominant_colors(&lab, cli.max_colours);
 
@@ -148,11 +154,10 @@ mod tests {
 
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif() {
-        let output = get_success(&["./src/tests/animated_squares.gif"]);
+        let output = get_success(&["./src/tests/animated_squares.gif", "--no-palette"]);
 
         assert_eq!(
-            output.stdout.matches("\n").count(),
-            2,
+            output.stdout, "#0200ff\n#ff0000\n",
             "stdout = {:?}",
             output.stdout
         );
@@ -165,6 +170,17 @@ mod tests {
         assert_eq!(
             output.stdout.matches("\n").count(),
             2,
+            "stdout = {:?}",
+            output.stdout
+        );
+    }
+
+    #[test]
+    fn it_looks_at_multiple_frames_in_an_animated_webp() {
+        let output = get_success(&["./src/tests/animated_squares.webp", "--no-palette"]);
+
+        assert_eq!(
+            output.stdout, "#0200ff\n#ff0100\n#ff0002\n",
             "stdout = {:?}",
             output.stdout
         );
@@ -206,7 +222,10 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "The image format could not be determined\n");
+        assert_eq!(
+            output.stderr,
+            "Unable to determine image format from file extension\n"
+        );
     }
 
     #[test]
@@ -215,7 +234,10 @@ mod tests {
 
         assert_eq!(output.exit_code, 1);
         assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "The image format could not be determined\n");
+        assert_eq!(
+            output.stderr,
+            "Unable to determine image format from file extension\n"
+        );
     }
 
     #[test]
@@ -227,6 +249,42 @@ mod tests {
         assert_eq!(
             output.stderr,
             "Format error decoding Png: Invalid PNG signature.\n"
+        );
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_a_malformed_gif() {
+        let output = get_failure(&["./src/tests/malformed.txt.gif"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(
+            output.stderr,
+            "Format error decoding Gif: malformed GIF header\n"
+        );
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_a_malformed_webp() {
+        let output = get_failure(&["./src/tests/malformed.txt.webp"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(
+            output.stderr,
+            "Format error decoding WebP: Invalid Chunk header: [82, 73, 70, 70]\n"
+        );
+    }
+
+    #[test]
+    fn it_fails_if_you_pass_a_path_without_a_file_extension() {
+        let output = get_failure(&["./src/tests/noextension"]);
+
+        assert_eq!(output.exit_code, 1);
+        assert_eq!(output.stdout, "");
+        assert_eq!(
+            output.stderr,
+            "Path has no file extension, so could not determine image format\n"
         );
     }
 

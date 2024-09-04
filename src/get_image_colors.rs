@@ -6,21 +6,39 @@
 //
 // It returns a Vec<Lab>, which can be passed to the k-means process.
 
-use std::ffi::OsStr;
+use std::fmt::Display;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 
 use image::codecs::gif::GifDecoder;
+use image::codecs::webp::WebPDecoder;
 use image::imageops::FilterType;
-use image::{AnimationDecoder, DynamicImage, Frame};
+use image::{AnimationDecoder, DynamicImage, Frame, ImageFormat};
 use palette::cast::from_component_slice;
 use palette::{IntoColor, Lab, Srgba};
 
-pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
-    let image_bytes = match path.extension().and_then(OsStr::to_str) {
-        Some(ext) if ext.to_lowercase() == "gif" => get_bytes_for_gif(&path),
-        _ => get_bytes_for_non_gif(&path),
+pub fn get_image_colors(path: &PathBuf) -> Result<Vec<Lab>, GetImageColorsErr> {
+    let format = get_format(path)?;
+
+    let f = File::open(path)?;
+    let reader = BufReader::new(f);
+
+    let image_bytes = match format {
+        ImageFormat::Gif => {
+            let decoder = GifDecoder::new(reader)?;
+            get_bytes_for_animated_image(decoder)
+        }
+
+        ImageFormat::WebP => {
+            let decoder = WebPDecoder::new(reader)?;
+            get_bytes_for_animated_image(decoder)
+        }
+
+        format => {
+            let decoder = image::load(reader, format)?;
+            get_bytes_for_static_image(decoder)
+        }
     };
 
     let lab: Vec<Lab> = from_component_slice::<Srgba<u8>>(&image_bytes)
@@ -28,18 +46,55 @@ pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
         .map(|x| x.into_format::<_, f32>().into_color())
         .collect();
 
-    lab
+    Ok(lab)
 }
 
-fn get_bytes_for_non_gif(path: &PathBuf) -> Vec<u8> {
-    let img = match image::open(&path) {
-        Ok(im) => im,
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
+pub enum GetImageColorsErr {
+    IoError(std::io::Error),
+    ImageError(image::ImageError),
+    GetFormatError(String),
+}
+
+impl Display for GetImageColorsErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GetImageColorsErr::IoError(io_error) => write!(f, "{}", io_error),
+            GetImageColorsErr::ImageError(image_error) => write!(f, "{}", image_error),
+            GetImageColorsErr::GetFormatError(format_error) => write!(f, "{}", format_error),
         }
+    }
+}
+
+impl From<std::io::Error> for GetImageColorsErr {
+    fn from(e: std::io::Error) -> GetImageColorsErr {
+        return GetImageColorsErr::IoError(e);
+    }
+}
+
+impl From<image::ImageError> for GetImageColorsErr {
+    fn from(e: image::ImageError) -> GetImageColorsErr {
+        return GetImageColorsErr::ImageError(e);
+    }
+}
+
+fn get_format(path: &PathBuf) -> Result<ImageFormat, GetImageColorsErr> {
+    let format = match path.extension() {
+        Some(ext) => Ok(image::ImageFormat::from_extension(ext)),
+        None => Err(GetImageColorsErr::GetFormatError(
+            "Path has no file extension, so could not determine image format".to_string(),
+        )),
     };
 
+    match format {
+        Ok(Some(format)) => Ok(format),
+        Ok(None) => Err(GetImageColorsErr::GetFormatError(
+            "Unable to determine image format from file extension".to_string(),
+        )),
+        Err(e) => Err(e),
+    }
+}
+
+fn get_bytes_for_static_image(img: DynamicImage) -> Vec<u8> {
     // Resize the image after we open it.  For this tool I'd rather get a good answer
     // quickly than a great answer slower.
     //
@@ -60,20 +115,10 @@ fn get_bytes_for_non_gif(path: &PathBuf) -> Vec<u8> {
     resized_img.into_rgba8().into_raw()
 }
 
-fn get_bytes_for_gif(path: &PathBuf) -> Vec<u8> {
-    let f = match File::open(path) {
-        Ok(im) => im,
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        }
-    };
+fn get_bytes_for_animated_image<'a>(decoder: impl AnimationDecoder<'a>) -> Vec<u8> {
+    let frames: Vec<Frame> = decoder.into_frames().collect_frames().unwrap();
 
-    let f = BufReader::new(f);
-
-    let decoder = GifDecoder::new(f).ok().unwrap();
-
-    // If the GIF is animated, we want to make sure we look at multiple
+    // If the image is animated, we want to make sure we look at multiple
     // frames when choosing the dominant colour.
     //
     // We don't want to pass all the frames to the k-means analysis, because
@@ -82,8 +127,7 @@ fn get_bytes_for_gif(path: &PathBuf) -> Vec<u8> {
     //
     // For that reason, we select a sample of up to 50 frames and use those
     // as the basis for analysis.
-    let frames: Vec<Frame> = decoder.into_frames().collect_frames().unwrap();
-
+    //
     // How this works: it tells us we should be looking at the nth frame.
     // Examples:
     //
@@ -144,11 +188,11 @@ mod test {
     // processed correctly.
     #[test]
     fn it_gets_colors_for_mri_fruit() {
-        get_image_colors(&PathBuf::from("./src/tests/garlic.gif"));
+        assert!(get_image_colors(&PathBuf::from("./src/tests/garlic.gif")).is_ok());
     }
 
     #[test]
     fn get_colors_for_webp() {
-        get_image_colors(&PathBuf::from("./src/tests/purple.webp"));
+        assert!(get_image_colors(&PathBuf::from("./src/tests/purple.webp")).is_ok());
     }
 }
