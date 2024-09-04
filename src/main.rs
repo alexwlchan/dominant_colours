@@ -148,11 +148,10 @@ mod tests {
 
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif() {
-        let output = get_success(&["./src/tests/animated_squares.gif"]);
+        let output = get_success(&["./src/tests/animated_squares.gif", "--no-palette"]);
 
         assert_eq!(
-            output.stdout.matches("\n").count(),
-            2,
+            output.stdout, "#0200ff\n#ff0000\n",
             "stdout = {:?}",
             output.stdout
         );
@@ -165,6 +164,17 @@ mod tests {
         assert_eq!(
             output.stdout.matches("\n").count(),
             2,
+            "stdout = {:?}",
+            output.stdout
+        );
+    }
+
+    #[test]
+    fn it_looks_at_multiple_frames_in_an_animated_webp() {
+        let output = get_success(&["./src/tests/animated_squares.webp", "--no-palette"]);
+
+        assert_eq!(
+            output.stdout, "#0200ff\n#ff0100\n#ff0002\n",
             "stdout = {:?}",
             output.stdout
         );

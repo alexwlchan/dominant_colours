@@ -6,26 +6,56 @@
 //
 // It returns a Vec<Lab>, which can be passed to the k-means process.
 
-use std::ffi::OsStr;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 
 use image::codecs::gif::GifDecoder;
+use image::codecs::webp::WebPDecoder;
 use image::imageops::FilterType;
-use image::{AnimationDecoder, DynamicImage, Frame};
+use image::{AnimationDecoder, DynamicImage, Frame, ImageFormat};
 use palette::cast::from_component_slice;
 use palette::{IntoColor, Lab, Srgba};
 
 pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
-    let extension = match path.extension().and_then(OsStr::to_str) {
-        Some(ext) => Some(ext.to_lowercase()),
-        None => None,
+    let format = image::ImageFormat::from_extension(path.extension().unwrap());
+
+    let f = match File::open(path) {
+        Ok(im) => im,
+        Err(e) => {
+            eprintln!("{}", e);
+            std::process::exit(1);
+        }
     };
 
-    let image_bytes = match extension {
-        Some(ext) if ext == "gif" => get_bytes_for_gif(&path),
-        _ => get_bytes_for_static_image(&path),
+    let reader = BufReader::new(f);
+
+    let image_bytes = match format {
+        Some(ImageFormat::Gif) => {
+            let decoder = GifDecoder::new(reader).ok().unwrap();
+            get_bytes_for_animated_image(decoder)
+        }
+
+        Some(ImageFormat::WebP) => {
+            let decoder = WebPDecoder::new(reader).ok().unwrap();
+            get_bytes_for_animated_image(decoder)
+        }
+
+        Some(format) => {
+            let decoder = match image::load(reader, format) {
+                Ok(im) => im,
+                Err(e) => {
+                    eprintln!("{}", e);
+                    std::process::exit(1)
+                }
+            };
+            get_bytes_for_static_image(decoder)
+        }
+
+        _ => {
+            eprintln!("The image format could not be determined");
+            std::process::exit(1);
+        }
     };
 
     let lab: Vec<Lab> = from_component_slice::<Srgba<u8>>(&image_bytes)
@@ -36,15 +66,7 @@ pub fn get_image_colors(path: &PathBuf) -> Vec<Lab> {
     lab
 }
 
-fn get_bytes_for_static_image(path: &PathBuf) -> Vec<u8> {
-    let img = match image::open(&path) {
-        Ok(im) => im,
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        }
-    };
-
+fn get_bytes_for_static_image(img: DynamicImage) -> Vec<u8> {
     // Resize the image after we open it.  For this tool I'd rather get a good answer
     // quickly than a great answer slower.
     //
@@ -123,22 +145,6 @@ fn get_bytes_for_animated_image<'a>(decoder: impl AnimationDecoder<'a>) -> Vec<u
         .into_iter()
         .flatten()
         .collect()
-}
-
-fn get_bytes_for_gif(path: &PathBuf) -> Vec<u8> {
-    let f = match File::open(path) {
-        Ok(im) => im,
-        Err(e) => {
-            eprintln!("{}", e);
-            std::process::exit(1);
-        }
-    };
-
-    let f = BufReader::new(f);
-
-    let decoder = GifDecoder::new(f).ok().unwrap();
-
-    get_bytes_for_animated_image(decoder)
 }
 
 #[cfg(test)]
