@@ -6,7 +6,7 @@ edition = "2018"
 [dependencies]
 assert_cmd = "2.0.16"
 clap = { version = "4.5.18", features = ["derive"] }
-regex = "1.10.6"
+regex = "1.11.0"
 
 [dependencies.kmeans_colors]
 version = "0.6.0"
