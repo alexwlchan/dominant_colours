@@ -1,5 +1,6 @@
 #![deny(warnings)]
 
+use std::io::IsTerminal;
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -51,8 +52,28 @@ fn main() {
         .map(|c| Srgb::from_color(*c).into_format())
         .collect::<Vec<Srgb<u8>>>();
 
+    // Should we print with colours in the terminal, or just sent text?
+    //
+    // When I created this tool, I had a `--no-palette` flag to suppress the
+    // terminal colours, but I've since realised that I can look for the
+    // presence of a TTY and disable colours if we're not in a terminal,
+    // even if the user hasn't passed `--no-palette`.
+    //
+    // I'm keeping the old flag for backwards compatibility, but I might
+    // retire it in a future v2 update.
+    //
+    // Note: because of the difficulty of simulating a TTY in automated tests,
+    // this isn't tested properly -- but I'll notice quickly if this breaks!
+    let include_bg_color = if cli.no_palette {
+        false
+    } else if std::io::stdout().is_terminal() {
+        true
+    } else {
+        false
+    };
+
     for c in rgb_colors {
-        printing::print_color(c, &cli.background, cli.no_palette);
+        printing::print_color(c, &cli.background, include_bg_color);
     }
 }
 
@@ -68,14 +89,13 @@ mod tests {
     // provided by the external library.
 
     #[test]
-    fn it_prints_the_color_with_ansi_escape_codes() {
+    fn it_prints_the_colour() {
         let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
 
         assert_eq!(output.exit_code, 0);
 
         assert!(
-            output.stdout == "\u{1b}[38;2;255;0;0m▇ #ff0000\u{1b}[0m\n"
-                || output.stdout == "\u{1b}[38;2;254;0;0m▇ #fe0000\u{1b}[0m\n",
+            output.stdout == "#ff0000\n" || output.stdout == "#fe0000\n",
             "stdout = {:?}",
             output.stdout
         );
