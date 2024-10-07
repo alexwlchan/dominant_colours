@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.0 - 2024-10-05
+
+*   `dominant_colours` will now skip printing terminal colours if it detects it's not running in a tty.  This makes it slightly easier to use in automated environments, because you don't need to pass the `--no-palette` flag.
+
 ## v1.3.0 - 2024-09-04
 
 *   Add support for animated WebP images.
