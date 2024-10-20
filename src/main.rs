@@ -292,7 +292,7 @@ mod tests {
         assert_eq!(output.stdout, "");
         assert_eq!(
             output.stderr,
-            "Format error decoding WebP: Invalid Chunk header: [82, 73, 70, 70]\n"
+            "Format error decoding WebP: Invalid Chunk header: [52, 49, 46, 46]\n"
         );
     }
 
