@@ -10,6 +10,8 @@ pub fn find_dominant_colors(lab: &Vec<Lab>, max_colors: usize) -> Vec<Lab> {
     let verbose = false;
     let seed: u64 = 0;
 
+    assert!(lab.len() > 0);
+
     let result = get_kmeans_hamerly(max_colors, max_iterations, converge, verbose, lab, seed);
 
     result.centroids
