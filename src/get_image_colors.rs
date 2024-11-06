@@ -30,7 +30,7 @@ pub fn get_image_colors(path: &PathBuf) -> Result<Vec<Lab>, GetImageColorsErr> {
             get_bytes_for_animated_image(decoder)
         }
 
-        ImageFormat::WebP => {
+        ImageFormat::WebP if is_animated_webp(path) => {
             let decoder = WebPDecoder::new(reader)?;
             get_bytes_for_animated_image(decoder)
         }
@@ -49,6 +49,7 @@ pub fn get_image_colors(path: &PathBuf) -> Result<Vec<Lab>, GetImageColorsErr> {
     Ok(lab)
 }
 
+#[derive(Debug)]
 pub enum GetImageColorsErr {
     IoError(std::io::Error),
     ImageError(image::ImageError),
@@ -94,6 +95,22 @@ fn get_format(path: &PathBuf) -> Result<ImageFormat, GetImageColorsErr> {
     }
 }
 
+/// Returns true if a WebP file is animated, and false otherwise.
+///
+/// This function assumes that the file exists and can be opened.
+fn is_animated_webp(path: &PathBuf) -> bool {
+    let f = File::open(path).unwrap();
+    let reader = BufReader::new(f);
+
+    match image_webp::WebPDecoder::new(reader) {
+        // num_frames() returns the number of frames in the animation,
+        // or zero if the image is not animated.
+        // See https://docs.rs/image-webp/0.2.0/image_webp/struct.WebPDecoder.html#method.num_frames
+        Ok(decoder) => decoder.num_frames() > 0,
+        Err(_) => false,
+    }
+}
+
 fn get_bytes_for_static_image(img: DynamicImage) -> Vec<u8> {
     // Resize the image after we open it.  For this tool I'd rather get a good answer
     // quickly than a great answer slower.
@@ -117,6 +134,7 @@ fn get_bytes_for_static_image(img: DynamicImage) -> Vec<u8> {
 
 fn get_bytes_for_animated_image<'a>(decoder: impl AnimationDecoder<'a>) -> Vec<u8> {
     let frames: Vec<Frame> = decoder.into_frames().collect_frames().unwrap();
+    assert!(frames.len() > 0);
 
     // If the image is animated, we want to make sure we look at multiple
     // frames when choosing the dominant colour.
@@ -187,12 +205,34 @@ mod test {
     // caused v1.1.2 to fall over.  This is a test that they can still be
     // processed correctly.
     #[test]
-    fn it_gets_colors_for_mri_fruit() {
-        assert!(get_image_colors(&PathBuf::from("./src/tests/garlic.gif")).is_ok());
+    fn it_gets_colors_for_animated_gif() {
+        let colors = get_image_colors(&PathBuf::from("./src/tests/garlic.gif"));
+
+        assert!(colors.is_ok());
+        assert!(colors.unwrap().len() > 0);
     }
 
     #[test]
-    fn get_colors_for_webp() {
-        assert!(get_image_colors(&PathBuf::from("./src/tests/purple.webp")).is_ok());
+    fn get_colors_for_static_gif() {
+        let colors = get_image_colors(&PathBuf::from("./src/tests/yellow.gif"));
+
+        assert!(colors.is_ok());
+        assert!(colors.unwrap().len() > 0);
+    }
+
+    #[test]
+    fn get_colors_for_static_webp() {
+        let colors = get_image_colors(&PathBuf::from("./src/tests/purple.webp"));
+
+        assert!(colors.is_ok());
+        assert!(colors.unwrap().len() > 0);
+    }
+
+    #[test]
+    fn get_colors_for_animated_webp() {
+        let colors = get_image_colors(&PathBuf::from("./src/tests/animated_squares.webp"));
+
+        assert!(colors.is_ok());
+        assert!(colors.unwrap().len() > 0);
     }
 }

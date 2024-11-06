@@ -1,11 +1,12 @@
 [package]
 name = "dominant_colours"
-version = "1.4.0"
+version = "1.4.1"
 edition = "2018"
 
 [dependencies]
 assert_cmd = "2.0.16"
 clap = { version = "4.5.20", features = ["derive"] }
+image-webp = "0.2.0"
 regex = "1.11.1"
 
 [dependencies.kmeans_colors]

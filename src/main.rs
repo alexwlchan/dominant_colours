@@ -40,6 +40,8 @@ fn main() {
         }
     };
 
+    assert!(lab.len() > 0);
+
     let dominant_colors = find_dominant_colors::find_dominant_colors(&lab, cli.max_colours);
 
     let selected_colors = match cli.background {
