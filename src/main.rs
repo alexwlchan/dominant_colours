@@ -326,9 +326,6 @@ mod tests {
 #[cfg(test)]
 #[macro_use]
 mod test_helpers {
-    use assert_cmd::assert::Assert;
-    use assert_cmd::Command;
-
     /// Run this command-line tool with zero or more arguments:
     ///
     ///     run_command!();
@@ -340,28 +337,17 @@ mod test_helpers {
     /// See https://docs.rs/assert_cmd/latest/assert_cmd/assert/struct.Assert.html
     #[macro_export]
     macro_rules! run_command {
-        // Match zero arguments
         () => {
-            $crate::test_helpers::run_command(&[])
+            assert_cmd::Command::cargo_bin(env!("CARGO_PKG_NAME"))
+                       .unwrap()
+                       .assert()
         };
 
-        // Match one or more arguments
         ($($arg:expr),+ $(,)?) => {{
-            let args = &[$($arg),*];
-            $crate::test_helpers::run_command(args)
+            assert_cmd::Command::cargo_bin(env!("CARGO_PKG_NAME"))
+                       .unwrap()
+                       .args(&[$($arg),*])
+                       .assert()
         }};
-    }
-
-    /// Run this command-line tool with the given arguments.
-    ///
-    /// This returns an `assert_cmd::assert::Assert` that will allow
-    /// you to make assertions about the output.
-    /// See https://docs.rs/assert_cmd/latest/assert_cmd/assert/struct.Assert.html
-    pub fn run_command(args: &[&str]) -> Assert {
-        let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
-
-        let assert = cmd.args(args).assert();
-
-        assert
     }
 }
