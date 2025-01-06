@@ -329,8 +329,8 @@ mod test_helpers {
     /// Run this command-line tool with zero or more arguments:
     ///
     ///     run_command!();
-    ///     run_command!("test");
-    ///     run_command!("test", "--nocapture", "--ignored");
+    ///     run_command!("square");
+    ///     run_command!("square", "--colour=red");
     ///
     /// This returns an `assert_cmd::assert::Assert` that will allow
     /// you to make assertions about the output.
