@@ -81,310 +81,245 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use std::str;
-
-    use assert_cmd::assert::OutputAssertExt;
-    use assert_cmd::Command;
     use predicates::prelude::*;
 
-    use crate::test_helpers::run_command;
+    use crate::run_command;
 
     // Note: for the purposes of these tests, I mostly trust the k-means code
     // provided by the external library.
 
     #[test]
     fn it_prints_the_colour() {
-        let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
+        let result = run_command!("./src/tests/red.png");
 
-        assert_eq!(output.exit_code, 0);
-
-        assert!(
-            output.stdout == "#ff0000\n" || output.stdout == "#fe0000\n",
-            "stdout = {:?}",
-            output.stdout
-        );
-
-        assert_eq!(output.stderr, "");
+        result.success().stdout("#fe0000\n").stderr("");
     }
 
     #[test]
     fn it_can_look_at_png_images() {
-        let output = get_success(&["./src/tests/red.png", "--max-colours=1"]);
-        assert_eq!(output.exit_code, 0);
+        let result = run_command!("./src/tests/red.png");
+
+        result.success().stdout("#fe0000\n").stderr("");
     }
 
     #[test]
     fn it_can_look_at_jpeg_images() {
-        let output = get_success(&["./src/tests/noise.jpg", "--max-colours=1"]);
-        assert_eq!(output.exit_code, 0);
+        let result = run_command!("./src/tests/black.jpg");
+
+        result.success().stdout("#000000\n").stderr("");
     }
 
     #[test]
     fn it_can_look_at_static_gif_images() {
-        let output = get_success(&["./src/tests/yellow.gif", "--max-colours=1"]);
-        assert_eq!(output.exit_code, 0);
+        let result = run_command!("./src/tests/yellow.gif");
+
+        result.success().stdout("#fffb00\n").stderr("");
     }
 
     #[test]
     fn it_can_look_at_tiff_images() {
-        let output = get_success(&["./src/tests/green.tiff", "--max-colours=1"]);
-        assert_eq!(output.exit_code, 0);
+        let result = run_command!("./src/tests/green.tiff");
+
+        result.success().stdout("#04ff02\n").stderr("");
     }
 
     #[test]
     fn it_omits_the_escape_codes_with_no_palette() {
-        let output = get_success(&["./src/tests/red.png", "--max-colours=1", "--no-palette"]);
+        let result = run_command!("./src/tests/red.png", "--max-colours=1");
 
-        assert_eq!(output.exit_code, 0);
-
-        assert!(
-            output.stdout == "#ff0000\n" || output.stdout == "#fe0000\n",
-            "stdout = {:?}",
-            output.stdout
-        );
-
-        assert_eq!(output.stderr, "");
+        result.success().stdout("#fe0000\n").stderr("");
     }
 
     #[test]
     fn it_defaults_to_five_colours() {
-        let output = get_success(&["./src/tests/noise.jpg"]);
+        let result = run_command!("./src/tests/noise.jpg");
 
-        assert_eq!(
-            output.stdout.matches("\n").count(),
-            5,
-            "stdout = {:?}",
-            output.stdout
-        );
+        let has_five_lines = predicate::str::is_match(r"^(#[a-f0-9]{6}\n){5}$").unwrap();
+
+        result.success().stdout(has_five_lines).stderr("");
     }
 
     #[test]
     fn it_lets_you_choose_the_max_colours() {
-        let output = get_success(&["./src/tests/noise.jpg", "--max-colours=8"]);
+        let result = run_command!("./src/tests/noise.jpg", "--max-colours=8");
 
-        assert_eq!(
-            output.stdout.matches("\n").count(),
-            8,
-            "stdout = {:?}",
-            output.stdout
-        );
+        let has_eight_lines = predicate::str::is_match(r"^(#[a-f0-9]{6}\n){8}$").unwrap();
+
+        result.success().stdout(has_eight_lines).stderr("");
     }
 
     // The image created in the next two tests was created with the
     // following command:
     //
-    //      convert -delay 200 -loop 10 -dispose previous red.png blue.png red.png blue.png red.png blue.png red.png blue.png animated_squares.gif
+    //      convert \
+    //        -delay 200 \
+    //        -loop 10 \
+    //        -dispose previous \
+    //        red.png blue.png \
+    //        red.png blue.png \
+    //        red.png blue.png \
+    //        red.png blue.png \
+    //        animated_squares.gif
     //
+    // It creates an animated GIF that has alternating red/blue frames.
 
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif() {
-        let output = get_success(&["./src/tests/animated_squares.gif", "--no-palette"]);
+        let result = run_command!("./src/tests/animated_squares.gif");
 
-        assert_eq!(
-            output.stdout, "#0200ff\n#ff0000\n",
-            "stdout = {:?}",
-            output.stdout
-        );
+        result.success().stdout("#0200ff\n#ff0000\n").stderr("");
     }
 
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif_uppercase() {
-        let output = get_success(&["./src/tests/animated_upper_squares.GIF"]);
+        let result = run_command!("./src/tests/animated_upper_squares.GIF");
 
-        assert_eq!(
-            output.stdout.matches("\n").count(),
-            2,
-            "stdout = {:?}",
-            output.stdout
-        );
+        result.success().stdout("#0200ff\n#ff0000\n").stderr("");
     }
 
+    // This is an animated WebP that has alternating red/blue frames.
+    //
+    // It needs to look at multiple frames to see both colours.
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_webp() {
-        let output = get_success(&["./src/tests/animated_squares.webp", "--no-palette"]);
+        let result = run_command!("./src/tests/animated_squares.webp");
 
-        assert_eq!(
-            output.stdout, "#0200ff\n#ff0100\n#ff0002\n",
-            "stdout = {:?}",
-            output.stdout
-        );
+        result
+            .success()
+            .stdout("#0200ff\n#ff0100\n#ff0002\n")
+            .stderr("");
     }
 
     #[test]
     fn it_fails_if_you_pass_an_invalid_max_colours() {
-        let output = get_failure(&["./src/tests/red.png", "--max-colours=NaN"]);
+        let result = run_command!("./src/tests/red.png", "--max-colours=NaN");
 
-        assert_eq!(output.exit_code, 2);
-        assert_eq!(output.stdout, "");
-        assert_eq!(
-            output.stderr,
-            "error: invalid value 'NaN' for '--max-colours <MAX_COLOURS>': invalid digit found in string\n\nFor more information, try '--help'.\n"
-        );
+        result
+            .failure()
+            .code(2)
+            .stdout("")
+            .stderr("error: invalid value 'NaN' for '--max-colours <MAX_COLOURS>': invalid digit found in string\n\nFor more information, try '--help'.\n");
     }
 
     #[test]
     fn it_fails_if_you_pass_an_nonexistent_file() {
-        let output = get_failure(&["./doesnotexist.jpg"]);
+        let result = run_command!("./doesnotexist.jpg");
 
-        assert_eq!(output.exit_code, 1);
-        assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "No such file or directory (os error 2)\n");
+        result
+            .failure()
+            .code(1)
+            .stdout("")
+            .stderr("No such file or directory (os error 2)\n");
     }
 
     #[test]
     fn it_fails_if_you_pass_an_nonexistent_gif() {
-        let output = get_failure(&["./doesnotexist.gif"]);
+        let result = run_command!("./doesnotexist.gif");
 
-        assert_eq!(output.exit_code, 1);
-        assert_eq!(output.stdout, "");
-        assert_eq!(output.stderr, "No such file or directory (os error 2)\n");
+        result
+            .failure()
+            .code(1)
+            .stdout("")
+            .stderr("No such file or directory (os error 2)\n");
     }
 
     #[test]
     fn it_fails_if_you_pass_a_non_image_file() {
-        let output = get_failure(&["./README.md"]);
+        let result = run_command!("./README.md");
 
-        assert_eq!(output.exit_code, 1);
-        assert_eq!(output.stdout, "");
-        assert_eq!(
-            output.stderr,
-            "Unable to determine image format from file extension\n"
-        );
+        result
+            .failure()
+            .code(1)
+            .stdout("")
+            .stderr("Unable to determine image format from file extension\n");
     }
 
     #[test]
     fn it_fails_if_you_pass_an_unsupported_image_format() {
-        let output = get_failure(&["./src/tests/orange.heic"]);
+        let result = run_command!("./src/tests/orange.heic");
 
-        assert_eq!(output.exit_code, 1);
-        assert_eq!(output.stdout, "");
-        assert_eq!(
-            output.stderr,
-            "Unable to determine image format from file extension\n"
-        );
+        result
+            .failure()
+            .code(1)
+            .stdout("")
+            .stderr("Unable to determine image format from file extension\n");
     }
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_image() {
-        let output = get_failure(&["./src/tests/malformed.txt.png"]);
+        let result = run_command!("./src/tests/malformed.txt.png");
 
-        assert_eq!(output.exit_code, 1);
-        assert_eq!(output.stdout, "");
-        assert_eq!(
-            output.stderr,
-            "Format error decoding Png: Invalid PNG signature.\n"
-        );
+        result
+            .failure()
+            .code(1)
+            .stdout("")
+            .stderr("Format error decoding Png: Invalid PNG signature.\n");
     }
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_gif() {
-        let output = get_failure(&["./src/tests/malformed.txt.gif"]);
+        let result = run_command!("./src/tests/malformed.txt.gif");
 
-        assert_eq!(output.exit_code, 1);
-        assert_eq!(output.stdout, "");
-        assert_eq!(
-            output.stderr,
-            "Format error decoding Gif: malformed GIF header\n"
-        );
+        result
+            .failure()
+            .code(1)
+            .stdout("")
+            .stderr("Format error decoding Gif: malformed GIF header\n");
     }
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_webp() {
-        let output = get_failure(&["./src/tests/malformed.txt.webp"]);
+        let result = run_command!("./src/tests/malformed.txt.webp");
 
-        assert_eq!(output.exit_code, 1);
-        assert_eq!(output.stdout, "");
-        assert_eq!(
-            output.stderr,
-            "Format error decoding WebP: Invalid Chunk header: [52, 49, 46, 46]\n"
-        );
+        result
+            .failure()
+            .code(1)
+            .stdout("")
+            .stderr("Format error decoding WebP: Invalid Chunk header: [52, 49, 46, 46]\n");
     }
 
     #[test]
     fn it_fails_if_you_pass_a_path_without_a_file_extension() {
-        let output = get_failure(&["./src/tests/noextension"]);
+        let result = run_command!("./src/tests/noextension");
 
-        assert_eq!(output.exit_code, 1);
-        assert_eq!(output.stdout, "");
-        assert_eq!(
-            output.stderr,
-            "Path has no file extension, so could not determine image format\n"
-        );
+        result
+            .failure()
+            .code(1)
+            .stdout("")
+            .stderr("Path has no file extension, so could not determine image format\n");
     }
 
     #[test]
     fn it_chooses_the_right_color_for_a_dark_background() {
-        let output = get_success(&[
+        let result = run_command!(
             "src/tests/stripes.png",
             "--max-colours=5",
             "--best-against-bg=#222",
-            "--no-palette",
-        ]);
+        );
 
-        assert_eq!(output.stdout, "#d4fb79\n");
+        result.success().stdout("#d4fb79\n").stderr("");
     }
 
     #[test]
     fn it_chooses_the_right_color_for_a_light_background() {
-        let output = get_success(&[
+        let result = run_command!(
             "src/tests/stripes.png",
             "--max-colours=5",
             "--best-against-bg=#fff",
-            "--no-palette",
-        ]);
+        );
 
-        assert_eq!(output.stdout, "#693900\n");
+        result.success().stdout("#693900\n").stderr("");
     }
 
     #[test]
     fn it_prints_the_version() {
-        let result = crate::run_command!("--version");
+        let result = run_command!("--version");
 
-        // This predicate checks that the output looks something
-        // like `dominant_colours 1.2.3`
-        let predicate_fn =
+        // Match strings like `dominant_colours 1.2.3`
+        let is_version_string =
             predicate::str::is_match(r"^dominant_colours [0-9]+\.[0-9]+\.[0-9]+\n$").unwrap();
 
-        // Check the command:
-        //  - succeeded
-        //  - with stdout that matched the given regex
-        //  - with empty stderr
-        //
-        result.success().stdout(predicate_fn).stderr("");
-    }
-
-    struct DcOutput {
-        exit_code: i32,
-        stdout: String,
-        stderr: String,
-    }
-
-    fn get_success(args: &[&str]) -> DcOutput {
-        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
-        let output = cmd
-            .args(args)
-            .unwrap()
-            .assert()
-            .success()
-            .get_output()
-            .to_owned();
-
-        DcOutput {
-            exit_code: output.status.code().unwrap(),
-            stdout: str::from_utf8(&output.stdout).unwrap().to_owned(),
-            stderr: str::from_utf8(&output.stderr).unwrap().to_owned(),
-        }
-    }
-
-    fn get_failure(args: &[&str]) -> DcOutput {
-        let mut cmd = Command::cargo_bin("dominant_colours").unwrap();
-        let output = cmd.args(args).unwrap_err().as_output().unwrap().to_owned();
-
-        DcOutput {
-            exit_code: output.status.code().unwrap(),
-            stdout: str::from_utf8(&output.stdout).unwrap().to_owned(),
-            stderr: str::from_utf8(&output.stderr).unwrap().to_owned(),
-        }
+        result.success().stdout(is_version_string).stderr("");
     }
 }
 
@@ -394,17 +329,26 @@ mod test_helpers {
     use assert_cmd::assert::Assert;
     use assert_cmd::Command;
 
+    /// Run this command-line tool with zero or more arguments:
+    ///
+    ///     run_command!();
+    ///     run_command!("test");
+    ///     run_command!("test", "--nocapture", "--ignored");
+    ///
+    /// This returns an `assert_cmd::assert::Assert` that will allow
+    /// you to make assertions about the output.
+    /// See https://docs.rs/assert_cmd/latest/assert_cmd/assert/struct.Assert.html
     #[macro_export]
     macro_rules! run_command {
         // Match zero arguments
         () => {
-            run_command(&[])
+            $crate::test_helpers::run_command(&[])
         };
 
         // Match one or more arguments
         ($($arg:expr),+ $(,)?) => {{
             let args = &[$($arg),*];
-            run_command(args)
+            $crate::test_helpers::run_command(args)
         }};
     }
 
