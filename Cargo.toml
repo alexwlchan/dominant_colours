@@ -7,7 +7,7 @@ edition = "2018"
 assert_cmd = "2.0.16"
 clap = { version = "4.5.21", features = ["derive"] }
 image-webp = "0.2.0"
-regex = "1.11.1"
+predicates = "3"
 
 [dependencies.kmeans_colors]
 version = "0.6.0"

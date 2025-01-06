@@ -85,7 +85,9 @@ mod tests {
 
     use assert_cmd::assert::OutputAssertExt;
     use assert_cmd::Command;
-    use regex::Regex;
+    use predicates::prelude::*;
+
+    use crate::test_helpers::run_command;
 
     // Note: for the purposes of these tests, I mostly trust the k-means code
     // provided by the external library.
@@ -336,14 +338,19 @@ mod tests {
 
     #[test]
     fn it_prints_the_version() {
-        let output = get_success(&["--version"]);
+        let result = crate::run_command!("--version");
 
-        let re = Regex::new(r"^dominant_colours [0-9]+\.[0-9]+\.[0-9]+\n$").unwrap();
+        // This predicate checks that the output looks something
+        // like `dominant_colours 1.2.3`
+        let predicate_fn =
+            predicate::str::is_match(r"^dominant_colours [0-9]+\.[0-9]+\.[0-9]+\n$").unwrap();
 
-        assert!(re.is_match(&output.stdout));
-
-        assert_eq!(output.exit_code, 0);
-        assert_eq!(output.stderr, "");
+        // Check the command:
+        //  - succeeded
+        //  - with stdout that matched the given regex
+        //  - with empty stderr
+        //
+        result.success().stdout(predicate_fn).stderr("");
     }
 
     struct DcOutput {
@@ -378,5 +385,39 @@ mod tests {
             stdout: str::from_utf8(&output.stdout).unwrap().to_owned(),
             stderr: str::from_utf8(&output.stderr).unwrap().to_owned(),
         }
+    }
+}
+
+#[cfg(test)]
+#[macro_use]
+mod test_helpers {
+    use assert_cmd::assert::Assert;
+    use assert_cmd::Command;
+
+    #[macro_export]
+    macro_rules! run_command {
+        // Match zero arguments
+        () => {
+            run_command(&[])
+        };
+
+        // Match one or more arguments
+        ($($arg:expr),+ $(,)?) => {{
+            let args = &[$($arg),*];
+            run_command(args)
+        }};
+    }
+
+    /// Run this command-line tool with the given arguments.
+    ///
+    /// This returns an `assert_cmd::assert::Assert` that will allow
+    /// you to make assertions about the output.
+    /// See https://docs.rs/assert_cmd/latest/assert_cmd/assert/struct.Assert.html
+    pub fn run_command(args: &[&str]) -> Assert {
+        let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME")).unwrap();
+
+        let assert = cmd.args(args).assert();
+
+        assert
     }
 }
