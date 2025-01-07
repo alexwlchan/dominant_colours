@@ -91,7 +91,7 @@ mod tests {
     fn it_prints_the_colour() {
         Command::cargo_bin("dominant_colours")
             .unwrap()
-            .args(&["./src/tests/red.png"])
+            .arg("./src/tests/red.png")
             .assert()
             .success()
             .stdout("#fe0000\n")
@@ -129,7 +129,7 @@ mod tests {
 
         Command::cargo_bin("dominant_colours")
             .unwrap()
-            .args(&["./src/tests/noise.jpg"])
+            .arg("./src/tests/noise.jpg")
             .assert()
             .success()
             .stdout(has_five_lines)
@@ -196,7 +196,7 @@ mod tests {
     ) -> assert_cmd::assert::Assert {
         Command::cargo_bin("dominant_colours")
             .unwrap()
-            .args(&[path])
+            .arg(path)
             .assert()
             .success()
             .stdout(predicate::eq(expected_stdout))
@@ -287,7 +287,7 @@ mod tests {
     ) -> assert_cmd::assert::Assert {
         Command::cargo_bin("dominant_colours")
             .unwrap()
-            .args(&[path])
+            .arg(path)
             .assert()
             .failure()
             .code(1)
@@ -333,7 +333,7 @@ mod tests {
 
         Command::cargo_bin("dominant_colours")
             .unwrap()
-            .args(&["--version"])
+            .arg("--version")
             .assert()
             .success()
             .stdout(is_version_string)
