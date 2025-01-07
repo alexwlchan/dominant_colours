@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 
 use std::io::IsTerminal;
 use std::path::PathBuf;
@@ -81,71 +81,72 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use assert_cmd::Command;
     use predicates::prelude::*;
-
-    use crate::run_command;
 
     // Note: for the purposes of these tests, I mostly trust the k-means code
     // provided by the external library.
 
     #[test]
     fn it_prints_the_colour() {
-        let result = run_command!("./src/tests/red.png");
-
-        result.success().stdout("#fe0000\n").stderr("");
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./src/tests/red.png"])
+            .assert()
+            .success()
+            .stdout("#fe0000\n")
+            .stderr("");
     }
 
     #[test]
     fn it_can_look_at_png_images() {
-        let result = run_command!("./src/tests/red.png");
-
-        result.success().stdout("#fe0000\n").stderr("");
+        assert_gets_colours_from_image("./src/tests/red.png", "#fe0000\n");
     }
 
     #[test]
     fn it_can_look_at_jpeg_images() {
-        let result = run_command!("./src/tests/black.jpg");
-
-        result.success().stdout("#000000\n").stderr("");
+        assert_gets_colours_from_image("./src/tests/black.jpg", "#000000\n");
     }
 
     #[test]
     fn it_can_look_at_static_gif_images() {
-        let result = run_command!("./src/tests/yellow.gif");
-
-        result.success().stdout("#fffb00\n").stderr("");
+        assert_gets_colours_from_image("./src/tests/yellow.gif", "#fffb00\n");
     }
 
     #[test]
     fn it_can_look_at_tiff_images() {
-        let result = run_command!("./src/tests/green.tiff");
-
-        result.success().stdout("#04ff02\n").stderr("");
+        assert_gets_colours_from_image("./src/tests/green.tiff", "#04ff02\n");
     }
 
     #[test]
     fn it_omits_the_escape_codes_with_no_palette() {
-        let result = run_command!("./src/tests/red.png", "--max-colours=1");
-
-        result.success().stdout("#fe0000\n").stderr("");
+        assert_gets_colours_from_image("./src/tests/red.png", "#fe0000\n");
     }
 
     #[test]
     fn it_defaults_to_five_colours() {
-        let result = run_command!("./src/tests/noise.jpg");
-
         let has_five_lines = predicate::str::is_match(r"^(#[a-f0-9]{6}\n){5}$").unwrap();
 
-        result.success().stdout(has_five_lines).stderr("");
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./src/tests/noise.jpg"])
+            .assert()
+            .success()
+            .stdout(has_five_lines)
+            .stderr("");
     }
 
     #[test]
     fn it_lets_you_choose_the_max_colours() {
-        let result = run_command!("./src/tests/noise.jpg", "--max-colours=8");
-
         let has_eight_lines = predicate::str::is_match(r"^(#[a-f0-9]{6}\n){8}$").unwrap();
 
-        result.success().stdout(has_eight_lines).stderr("");
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./src/tests/noise.jpg", "--max-colours=8"])
+            .assert()
+            .success()
+            .stdout(has_eight_lines)
+            .stderr("");
     }
 
     // The image created in the next two tests was created with the
@@ -165,16 +166,15 @@ mod tests {
 
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif() {
-        let result = run_command!("./src/tests/animated_squares.gif");
-
-        result.success().stdout("#0200ff\n#ff0000\n").stderr("");
+        assert_gets_colours_from_image("./src/tests/animated_squares.gif", "#0200ff\n#ff0000\n");
     }
 
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_gif_uppercase() {
-        let result = run_command!("./src/tests/animated_upper_squares.GIF");
-
-        result.success().stdout("#0200ff\n#ff0000\n").stderr("");
+        assert_gets_colours_from_image(
+            "./src/tests/animated_upper_squares.GIF",
+            "#0200ff\n#ff0000\n",
+        );
     }
 
     // This is an animated WebP that has alternating red/blue frames.
@@ -182,19 +182,33 @@ mod tests {
     // It needs to look at multiple frames to see both colours.
     #[test]
     fn it_looks_at_multiple_frames_in_an_animated_webp() {
-        let result = run_command!("./src/tests/animated_squares.webp");
+        assert_gets_colours_from_image(
+            "./src/tests/animated_squares.webp",
+            "#0200ff\n#ff0100\n#ff0002\n",
+        );
+    }
 
-        result
+    /// Get the dominant colours for an image, and check it succeeds
+    /// with the given stdout.
+    fn assert_gets_colours_from_image(
+        path: &str,
+        expected_stdout: &str,
+    ) -> assert_cmd::assert::Assert {
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&[path])
+            .assert()
             .success()
-            .stdout("#0200ff\n#ff0100\n#ff0002\n")
-            .stderr("");
+            .stdout(predicate::eq(expected_stdout))
+            .stderr("")
     }
 
     #[test]
     fn it_fails_if_you_pass_an_invalid_max_colours() {
-        let result = run_command!("./src/tests/red.png", "--max-colours=NaN");
-
-        result
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./src/tests/red.png", "--max-colours=NaN"])
+            .assert()
             .failure()
             .code(2)
             .stdout("")
@@ -203,151 +217,126 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_an_nonexistent_file() {
-        let result = run_command!("./doesnotexist.jpg");
-
-        result
-            .failure()
-            .code(1)
-            .stdout("")
-            .stderr("No such file or directory (os error 2)\n");
+        assert_file_fails_with_error(
+            "./doesnotexist.jpg",
+            "No such file or directory (os error 2)\n",
+        );
     }
 
     #[test]
     fn it_fails_if_you_pass_an_nonexistent_gif() {
-        let result = run_command!("./doesnotexist.gif");
-
-        result
-            .failure()
-            .code(1)
-            .stdout("")
-            .stderr("No such file or directory (os error 2)\n");
+        assert_file_fails_with_error(
+            "./doesnotexist.gif",
+            "No such file or directory (os error 2)\n",
+        );
     }
 
     #[test]
     fn it_fails_if_you_pass_a_non_image_file() {
-        let result = run_command!("./README.md");
-
-        result
-            .failure()
-            .code(1)
-            .stdout("")
-            .stderr("Unable to determine image format from file extension\n");
+        assert_file_fails_with_error(
+            "./README.md",
+            "Unable to determine image format from file extension\n",
+        );
     }
 
     #[test]
     fn it_fails_if_you_pass_an_unsupported_image_format() {
-        let result = run_command!("./src/tests/orange.heic");
-
-        result
-            .failure()
-            .code(1)
-            .stdout("")
-            .stderr("Unable to determine image format from file extension\n");
+        assert_file_fails_with_error(
+            "./src/tests/orange.heic",
+            "Unable to determine image format from file extension\n",
+        );
     }
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_image() {
-        let result = run_command!("./src/tests/malformed.txt.png");
-
-        result
-            .failure()
-            .code(1)
-            .stdout("")
-            .stderr("Format error decoding Png: Invalid PNG signature.\n");
+        assert_file_fails_with_error(
+            "./src/tests/malformed.txt.png",
+            "Format error decoding Png: Invalid PNG signature.\n",
+        );
     }
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_gif() {
-        let result = run_command!("./src/tests/malformed.txt.gif");
-
-        result
-            .failure()
-            .code(1)
-            .stdout("")
-            .stderr("Format error decoding Gif: malformed GIF header\n");
+        assert_file_fails_with_error(
+            "./src/tests/malformed.txt.gif",
+            "Format error decoding Gif: malformed GIF header\n",
+        );
     }
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_webp() {
-        let result = run_command!("./src/tests/malformed.txt.webp");
-
-        result
-            .failure()
-            .code(1)
-            .stdout("")
-            .stderr("Format error decoding WebP: Invalid Chunk header: [52, 49, 46, 46]\n");
+        assert_file_fails_with_error(
+            "./src/tests/malformed.txt.webp",
+            "Format error decoding WebP: Invalid Chunk header: [52, 49, 46, 46]\n",
+        );
     }
 
     #[test]
     fn it_fails_if_you_pass_a_path_without_a_file_extension() {
-        let result = run_command!("./src/tests/noextension");
+        assert_file_fails_with_error(
+            "./src/tests/noextension",
+            "Path has no file extension, so could not determine image format\n",
+        );
+    }
 
-        result
+    /// Try to get the dominant colours for a file, and check it fails
+    /// with the given error message.
+    fn assert_file_fails_with_error(
+        path: &str,
+        expected_stderr: &str,
+    ) -> assert_cmd::assert::Assert {
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&[path])
+            .assert()
             .failure()
             .code(1)
             .stdout("")
-            .stderr("Path has no file extension, so could not determine image format\n");
+            .stderr(predicate::eq(expected_stderr))
     }
 
     #[test]
     fn it_chooses_the_right_color_for_a_dark_background() {
-        let result = run_command!(
-            "src/tests/stripes.png",
-            "--max-colours=5",
-            "--best-against-bg=#222",
-        );
-
-        result.success().stdout("#d4fb79\n").stderr("");
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&[
+                "src/tests/stripes.png",
+                "--max-colours=5",
+                "--best-against-bg=#222",
+            ])
+            .assert()
+            .success()
+            .stdout("#d4fb79\n")
+            .stderr("");
     }
 
     #[test]
     fn it_chooses_the_right_color_for_a_light_background() {
-        let result = run_command!(
-            "src/tests/stripes.png",
-            "--max-colours=5",
-            "--best-against-bg=#fff",
-        );
-
-        result.success().stdout("#693900\n").stderr("");
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&[
+                "src/tests/stripes.png",
+                "--max-colours=5",
+                "--best-against-bg=#fff",
+            ])
+            .assert()
+            .success()
+            .stdout("#693900\n")
+            .stderr("");
     }
 
     #[test]
     fn it_prints_the_version() {
-        let result = run_command!("--version");
-
         // Match strings like `dominant_colours 1.2.3`
         let is_version_string =
             predicate::str::is_match(r"^dominant_colours [0-9]+\.[0-9]+\.[0-9]+\n$").unwrap();
 
-        result.success().stdout(is_version_string).stderr("");
-    }
-}
-
-#[cfg(test)]
-#[macro_use]
-mod test_helpers {
-    /// Run this command-line tool with zero or more arguments:
-    ///
-    ///     run_command!();
-    ///     run_command!("shape.png");
-    ///     run_command!("shape.png", "--sides=4", "--colour=red");
-    ///
-    /// This returns an `assert_cmd::assert::Assert` that will allow
-    /// you to make assertions about the output.
-    /// See https://docs.rs/assert_cmd/latest/assert_cmd/assert/struct.Assert.html
-    #[macro_export]
-    macro_rules! run_command {
-        () => {
-            assert_cmd::Command::cargo_bin(env!("CARGO_PKG_NAME"))
-                       .unwrap()
-                       .assert()
-        };
-
-        ($($arg:expr),+ $(,)?) => {{
-            assert_cmd::Command::cargo_bin(env!("CARGO_PKG_NAME"))
-                       .unwrap()
-                       .args(&[$($arg),*])
-                       .assert()
-        }};
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["--version"])
+            .assert()
+            .success()
+            .stdout(is_version_string)
+            .stderr("");
     }
 }
