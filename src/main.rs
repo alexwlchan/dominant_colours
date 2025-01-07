@@ -84,6 +84,7 @@ mod tests {
     use predicates::prelude::*;
 
     use crate::run_command;
+    use assert_cmd::Command;
 
     // Note: for the purposes of these tests, I mostly trust the k-means code
     // provided by the external library.
@@ -225,9 +226,10 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_a_non_image_file() {
-        let result = run_command!("./README.md");
-
-        result
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./README.md"])
+            .assert()
             .failure()
             .code(1)
             .stdout("")
@@ -236,9 +238,10 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_an_unsupported_image_format() {
-        let result = run_command!("./src/tests/orange.heic");
-
-        result
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./src/tests/orange.heic"])
+            .assert()
             .failure()
             .code(1)
             .stdout("")
@@ -247,9 +250,10 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_image() {
-        let result = run_command!("./src/tests/malformed.txt.png");
-
-        result
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./src/tests/malformed.txt.png"])
+            .assert()
             .failure()
             .code(1)
             .stdout("")
@@ -258,9 +262,10 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_gif() {
-        let result = run_command!("./src/tests/malformed.txt.gif");
-
-        result
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./src/tests/malformed.txt.gif"])
+            .assert()
             .failure()
             .code(1)
             .stdout("")
@@ -269,9 +274,10 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_a_malformed_webp() {
-        let result = run_command!("./src/tests/malformed.txt.webp");
-
-        result
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["./src/tests/malformed.txt.webp"])
+            .assert()
             .failure()
             .code(1)
             .stdout("")
@@ -280,46 +286,66 @@ mod tests {
 
     #[test]
     fn it_fails_if_you_pass_a_path_without_a_file_extension() {
-        let result = run_command!("./src/tests/noextension");
+        assert_fails_with_error(
+            "./src/tests/noextension",
+            "Path has no file extension, so could not determine image format\n",
+        );
+    }
 
-        result
+    fn assert_fails_with_error(path: &str, expected_error: &str) -> assert_cmd::assert::Assert {
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&[path])
+            .assert()
             .failure()
             .code(1)
             .stdout("")
-            .stderr("Path has no file extension, so could not determine image format\n");
+            .stderr(expected_error)
     }
 
     #[test]
     fn it_chooses_the_right_color_for_a_dark_background() {
-        let result = run_command!(
-            "src/tests/stripes.png",
-            "--max-colours=5",
-            "--best-against-bg=#222",
-        );
-
-        result.success().stdout("#d4fb79\n").stderr("");
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&[
+                "src/tests/stripes.png",
+                "--max-colours=5",
+                "--best-against-bg=#222",
+            ])
+            .assert()
+            .success()
+            .stdout("#d4fb79\n")
+            .stderr("");
     }
 
     #[test]
     fn it_chooses_the_right_color_for_a_light_background() {
-        let result = run_command!(
-            "src/tests/stripes.png",
-            "--max-colours=5",
-            "--best-against-bg=#fff",
-        );
-
-        result.success().stdout("#693900\n").stderr("");
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&[
+                "src/tests/stripes.png",
+                "--max-colours=5",
+                "--best-against-bg=#fff",
+            ])
+            .assert()
+            .success()
+            .stdout("#693900\n")
+            .stderr("");
     }
 
     #[test]
     fn it_prints_the_version() {
-        let result = run_command!("--version");
-
         // Match strings like `dominant_colours 1.2.3`
         let is_version_string =
             predicate::str::is_match(r"^dominant_colours [0-9]+\.[0-9]+\.[0-9]+\n$").unwrap();
 
-        result.success().stdout(is_version_string).stderr("");
+        Command::cargo_bin("dominant_colours")
+            .unwrap()
+            .args(&["--version"])
+            .assert()
+            .success()
+            .stdout(is_version_string)
+            .stderr("");
     }
 }
 
