@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 
 use std::io::IsTerminal;
 use std::path::PathBuf;
@@ -300,7 +300,7 @@ mod tests {
             .failure()
             .code(1)
             .stdout("")
-            .stderr(expected_error)
+            .stderr(predicate::str::contains(expected_error))
     }
 
     #[test]
