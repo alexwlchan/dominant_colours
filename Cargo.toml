@@ -5,7 +5,7 @@ edition = "2018"
 
 [dependencies]
 assert_cmd = "2.0.16"
-clap = { version = "4.5.30", features = ["derive"] }
+clap = { version = "4.5.31", features = ["derive"] }
 image-webp = "0.2.1"
 predicates = "3"
 
