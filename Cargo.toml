@@ -10,7 +10,7 @@ image-webp = "0.2.1"
 predicates = "3"
 
 [dependencies.kmeans_colors]
-version = "0.6.0"
+version = "0.7.0"
 features = ["palette_color"]
 default-features = false
 
