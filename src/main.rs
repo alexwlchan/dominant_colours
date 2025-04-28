@@ -27,6 +27,14 @@ struct Cli {
     /// Just print the hex values, not colour previews
     #[arg(long = "no-palette")]
     no_palette: bool,
+
+    /// Use uppercase hex (<span style="color: #7DC07B;">▇ #7DC07B</span>),
+    /// instead of lowercase (<span style="color: #7dc07b;">▇ #7dc07b</span>) when printing color codes.
+    #[arg(long = "uppercase-hex")]
+    #[arg(
+        help = "Use uppercase hex (#7DC07B), instead of lowercase (#7dc07b) when printing color codes."
+    )]
+    uppercase_hex: bool,
 }
 
 fn main() {
@@ -75,7 +83,7 @@ fn main() {
     };
 
     for c in rgb_colors {
-        printing::print_color(c, &cli.background, include_bg_color);
+        printing::print_color(c, &cli.background, include_bg_color, cli.uppercase_hex);
     }
 }
 
