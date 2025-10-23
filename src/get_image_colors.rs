@@ -235,4 +235,12 @@ mod test {
         assert!(colors.is_ok());
         assert!(colors.unwrap().len() > 0);
     }
+
+    #[test]
+    fn get_colors_for_avif() {
+        let colors = get_image_colors(&PathBuf::from("./src/tests/crossness.avif"));
+
+        assert!(colors.is_ok());
+        assert!(colors.unwrap().len() > 0);
+    }
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.0 - 2025-10-23
+
+*   Add support for AVIF images.
+
 ## v1.4.1 - 2024-11-06
 
 *   Fix a bug introduced in v1.3.0 where getting colours for non-animated WebP images would fail with an assertion error.
