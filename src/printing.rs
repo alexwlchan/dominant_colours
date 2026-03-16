@@ -5,10 +5,19 @@ use palette::Srgb;
 //
 // See https://alexwlchan.net/2021/04/coloured-squares/
 // See: https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797?permalink_comment_id=3857871
-pub fn print_color(c: Srgb<u8>, background: &Option<Srgb<u8>>, include_bg_colo: bool) {
-    let display_value = format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue);
+pub fn print_color(
+    c: Srgb<u8>,
+    background: &Option<Srgb<u8>>,
+    include_bg_color: bool,
+    uppecase_hex: bool,
+) {
+    let display_value = if uppecase_hex {
+        format!("#{:02X}{:02X}{:02X}", c.red, c.green, c.blue)
+    } else {
+        format!("#{:02x}{:02x}{:02x}", c.red, c.green, c.blue)
+    };
 
-    if include_bg_colo {
+    if include_bg_color {
         // If a background colour is specified, print it behind the
         // hex strings.
         match background {
